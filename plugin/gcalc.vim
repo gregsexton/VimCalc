@@ -97,7 +97,7 @@ python << EOF
 import vim, math, cmath, re
 
 def repl(expr):
-    result = str(eval(expr))
+    result = str(parse(expr))
     vim.command("call append(line('$'), \"" + result + "\")")
 
 #lexemes
@@ -165,8 +165,8 @@ class Token(object):
         return self._tokenID
     def getAttrib(self):
         return self._attrib
-    ID = property(getID, doc='id')
-    attrib = property(getAttrib, doc='attrib')
+    ID = property(getID, doc='Token ID [string].')
+    attrib = property(getAttrib, doc='Token attribute [string].')
 
 class Lexeme(object):
     def __init__(self, identifier, regex):
@@ -176,13 +176,13 @@ class Lexeme(object):
         return self._ID
     def getRegex(self):
         return self._regex
-    ID = property(getID, doc='id')
-    regex = property(getRegex, doc='regex')
+    ID = property(getID, doc='Lexeme ID [string].')
+    regex = property(getRegex, doc='Regex to match the Lexeme.')
 
 #language lexemes
 lexemes = [Lexeme('whitespace', r'\s+'),
-           Lexeme('decnumber',  r'[0-9]+(\.[0-9]+)?(e[+-]?[0-9]+)?'),
            Lexeme('hexnumber',  r'0x[0-9a-fA-F]+'),
+           Lexeme('decnumber',  r'[0-9]+(\.[0-9]+)?(e[+-]?[0-9]+)?'),
            Lexeme('let',        r'let'),
            Lexeme('ident',      r"[A-Za-z_][A-Za-z0-9_]*'?"),
            Lexeme('expAssign',  r'\*\*='),
@@ -208,7 +208,7 @@ lexemes = [Lexeme('whitespace', r'\s+'),
            Lexeme('plus',       r'\+')]
 
 #takes an expression and uses the language lexemes
-#to produce a sequence of tokens 
+#to produce a sequence of tokens
 def tokenize(expr):  #TODO: error handle
     tokens = []
     while expr != "":
@@ -218,7 +218,7 @@ def tokenize(expr):  #TODO: error handle
                 tokens.append(Token(lexeme.ID, match))
                 expr = expr[len(match):]
                 break
-    return tokens
+    return filter(lambda t: t.ID != 'whitespace', tokens)
 
 #returns the match if regex matches beginning of string
 #otherwise returns the emtpy string
@@ -230,12 +230,133 @@ def matchesFront(regex, string):
     else:
         return ""
 
-#useful for testing with map(...)
+#useful for testing tokenize with map(...)
 def getAttrib(token):
     return token.attrib
 
 def getID(token):
     return token.ID
+
+#gcalc context-free grammar
+
+#line    -> expr | assign
+#assign  -> let ident = expr
+#expr    -> expr + term | expr - term | expr ++ | expr -- | func | term
+#func    -> ident ( args )
+#args    -> expr , args | expr
+#term    -> term * factor | term / factor | term % factor
+#           | term << factor | term >> factor | term ! | factor
+#factor  -> expt ** factor | expt
+#expt    -> number | ident | ( expr )
+#number  -> decnumber | hexnumber | octalnumber
+
+class ParseNode(object):
+    def __init__(self, success, result, consumedTokens):
+        self._success = success
+        self._result = result
+        self._consumedTokens = consumedTokens
+    def getSuccess(self):
+        return self._success
+    def getResult(self):
+        return self._result
+    def getConsumed(self):
+        return self._consumedTokens
+    success = property(getSuccess, doc='Successfully evaluated?')
+    result = property(getResult, doc='The evaluated result at this node.')
+    consumeCount = property(getConsumed, doc='Number of consumed tokens.')
+
+#recursive descent parser -- simple and befitting the needs of this small program
+def parse(expr):
+    tokens = tokenize(expr)
+    lineNode = line(tokens)
+    if lineNode.success:
+        return lineNode.result
+    else:
+        return "Error!"
+
+def line(tokens):
+    exprNode = expr(tokens)
+    if exprNode.success:
+        if exprNode.consumeCount == len(tokens):
+            return exprNode
+        else
+            return ParseNode(False, 0, exprNode.consumeCount)
+
+    assignNode = assign(tokens)
+    if assignNode.success:
+        if assignNode.consumeCount == len(tokens):
+            return assignNode
+        else
+            return ParseNode(False, 0, assignNode.consumeCount)
+
+    return ParseNode(False, 0, 0)
+
+def assign(tokens):
+    if map(getID, tokens[0:3]) == ['let', 'ident', 'assign']:
+        exprNode = expr(tokens[3:])
+        if exprNode.consumeCount+3 == len(tokens):
+            storeSymbol(tokens[1].attrib, exprNode.result)
+            return exprNode
+        else:
+            return ParseNode(False, 0, exprNode.consumeCount+3)
+    else:
+        return ParseNode(False, 0, 0)
+
+def expr(tokens):
+    None
+
+def func(tokens):
+    if map(getID, tokens[0:2]) == ['ident', 'lParen']:
+        argsNode = args(tokens[2:])
+        if tokens[argsNode.consumeCount+2] == 'rParen':
+            return ParseNode(True, 'TODO', argsNode.consumeCount+3)
+        else
+            return ParseNode(False, 0, argsNode.consumeCount+2)
+    else:
+        return ParseNode(False, 0, 0)
+
+def args(tokens):
+    None
+
+def term(tokens):
+    None
+
+def factor(tokens):
+    None
+
+def expt(tokens):
+    token = tokens[0]
+    if token.ID == 'ident':
+        return ParseNode(True, lookupSymbol(token.attrib), 1)
+
+    numberNode = number(tokens)
+    if numberNode.success:
+        return numberNode
+
+    if token.ID == 'lParen':
+        exprNode = expr(tokens[1:])
+        if exprNode.success:
+            if tokens[exprNode.consumeCount+1] == 'rParen':
+                return ParseNode(True, exprNode.result, exprNode.consumeCount+2)
+    
+    return ParseNode(False, 0, 0)
+
+def number(tokens):
+    token = tokens[0]
+    if token.ID == 'decnumber':
+        return ParseNode(True, float(token.attrib), 1)
+    elif token.ID == 'hexnumber':
+        return ParseNode(True, long(token.attrib,16), 1)
+    elif token.ID == 'octnumber':
+        return ParseNode(True, long(token.attrib,8), 1)
+    else:
+        return ParseNode(False, 0, 0)
+
+def lookupSymbol(symbol):
+    return symbol
+
+def storeSymbol(symbol, value):
+    None
 
 EOF
 
