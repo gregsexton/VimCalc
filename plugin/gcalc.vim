@@ -1,3 +1,14 @@
+"TODO: write documentation
+"TODO: finish off parser
+"TODO: implement symbol lookup table
+"TODO: present much friendlier error messages
+"TODO: fix tokenizer infinite loop
+"TODO: move most of the functionality to autoload script?
+"TODO: write all of the math functions including hex/dec/oct conversion
+"TODO: implement octal numbers
+"TODO: built-in help like taglist/NerdTree?
+"TODO: Arbitrary precision numbers!!!
+
 "configurable options
 let g:GCalc_Title = "__GCALC__"
 let g:GCalc_Prompt = "> "
@@ -100,8 +111,9 @@ def repl(expr):
     result = str(parse(expr))
     vim.command("call append(line('$'), \"" + result + "\")")
 
-#lexemes
+#### syntactic analysis functions ##################################################
 
+#lexemes
 #digit  = [0-9]
 #digits = digit+
 
@@ -119,7 +131,7 @@ def repl(expr):
 
 #decnumber   = digits(. digits)?(e[+-]? digits)? TODO: negative numbers?
 #hexnumber   = 0xhexdigits  NOTE: hex can only represent unsigned integers
-#octalnumber = ??
+#octalnumber = ?? TODO:
 
 #whitespace = [\t ]+
 
@@ -213,7 +225,7 @@ lexemes = [Lexeme('whitespace', r'\s+'),
 
 #takes an expression and uses the language lexemes
 #to produce a sequence of tokens
-def tokenize(expr):  #TODO: error handle
+def tokenize(expr):  #TODO: error handle -- don't infinite loop!!!
     tokens = []
     while expr != "":
         for lexeme in lexemes:
@@ -241,8 +253,13 @@ def getAttrib(token):
 def getID(token):
     return token.ID
 
-#gcalc context-free grammar
+#### parser functions ##############################################################
 
+#TODO: this is all a bit messy due to passing essentially a vector around
+# instead of a list and not having shared state. Could be made a
+# lot simpler by using shared state...
+
+#gcalc context-free grammar
 #line    -> expr | assign
 #assign  -> let ident = expr
 #expr    -> expr + term | expr - term | expr ++ | expr -- | func | term
@@ -255,7 +272,6 @@ def getID(token):
 #number  -> decnumber | hexnumber | octalnumber
 
 #gcalc context-free grammar LL(1) -- for use with a recursive descent parser
-
 #line    -> expr | assign
 #assign  -> let ident = expr
 #expr    -> func|term {(+|-) func|term}[++|--]
@@ -282,6 +298,7 @@ class ParseNode(object):
     consumeCount = property(getConsumed, doc='Number of consumed tokens.')
 
 #recursive descent parser -- simple and befitting the needs of this small program
+#generates the parse tree with evaluated decoration
 def parse(expr):
     tokens = tokenize(expr)
     lineNode = line(tokens)
@@ -316,7 +333,7 @@ def assign(tokens):
     else:
         return ParseNode(False, 0, 0)
 
-def expr(tokens):
+def expr(tokens):               #TODO: finish this function
     funcNode = func(tokens)
     if funcNode.success:
         return funcNode
@@ -335,24 +352,6 @@ def func(tokens):
     else:
         return ParseNode(False, 0, 0)
 
-#def args(tokens):
-#    #returns a list of exprNodes to be used as function arguments
-#    nodes = []
-#    exprNode = expr(tokens)
-#    consumed = exprNode.consumeCount
-#    if exprNode.success:
-#        nodes.append(exprNode)
-#        while tokens[consumed].ID == 'comma':
-#            exprNode = expr(tokens[consumed:])
-#            consumed += exprNode.consumeCount
-#            if exprNode.success:
-#                nodes.append(exprNode)
-#            else:
-#                return ParseNode(False, 0, consumed)
-#        return ParseNode(True, nodes, consumed)
-#    else: 
-#        return ParseNode(False, 0, consumed)
-
 def args(tokens):
     #returns a list of exprNodes to be used as function arguments
     exprNode = expr(tokens)
@@ -363,12 +362,15 @@ def args(tokens):
     else:
         return ParseNode(False, 0, consumed)
 
-def term(tokens):
+def term(tokens):               #TODO: add '!' operator
     factNode = factor(tokens)
     consumed = factNode.consumeCount
     if factNode.success:
-        foldNode = foldlParseMult(factor, [lambda x,y:x*y, lambda x,y:x/y],
-                                  ['multiply', 'divide'], factNode.result,
+        foldNode = foldlParseMult(factor, 
+                                  [lambda x,y:x*y, lambda x,y:x/y, lambda x,y:x%y,
+                                      lambda x,y:int(x)<<int(y), lambda x,y:int(x)>>int(y)],
+                                  ['multiply', 'divide', 'modulo', 'lShift', 'rShift'],
+                                  factNode.result,
                                   tokens[consumed:])
         return ParseNode(foldNode.success, foldNode.result, consumed+foldNode.consumeCount)
     else:
@@ -409,11 +411,7 @@ def number(tokens):
     else:
         return ParseNode(False, 0, 0)
 
-def lookupSymbol(symbol):
-    return 5
-
-def storeSymbol(symbol, value):
-    print str(symbol) + ':' + str(value)
+#### helper functions for use by the parser ########################################
 
 def foldlParse(parsefn, resfn, symbol, initial, tokens):
     consumed = 0
@@ -452,6 +450,17 @@ def snoc(seq, x):  #TODO: find more pythonic way of doing this
     a = seq
     a.append(x)
     return a
+
+#### symbol table manipulation functions ###########################################
+
+def lookupSymbol(symbol):
+    return 5
+
+def storeSymbol(symbol, value):
+    print str(symbol) + ':' + str(value)
+
+
+#### mathematical functions (built-ins) ############################################
 
 EOF
 
