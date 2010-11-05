@@ -161,6 +161,10 @@ class Token(object):
     def __init__(self, tokenID, attrib):
         self._tokenID = tokenID
         self._attrib = attrib
+    def __repr__(self):
+        return str(self._tokenID) + ':' + str(self._attrib)
+    def __str__(self):
+        return str(self._tokenID) + ':' + str(self._attrib)
     def getID(self):
         return self._tokenID
     def getAttrib(self):
@@ -250,6 +254,18 @@ def getID(token):
 #expt    -> number | ident | ( expr )
 #number  -> decnumber | hexnumber | octalnumber
 
+#gcalc context-free grammar LL(1) -- for use with a recursive descent parser
+
+#line    -> expr | assign
+#assign  -> let ident = expr
+#expr    -> func|term {(+|-) func|term}[++|--]
+#func    -> ident ( args )
+#args    -> expr {, expr}
+#term    -> factor {(*|/|%|<<|>>) factor} [!]
+#factor  -> expt {** expt}
+#expt    -> number | ident | ( expr )
+#number  -> decnumber | hexnumber | octalnumber
+
 class ParseNode(object):
     def __init__(self, success, result, consumedTokens):
         self._success = success
@@ -272,23 +288,21 @@ def parse(expr):
     if lineNode.success:
         return lineNode.result
     else:
-        return "Error!"
+        return "Error: Result:" + str(lineNode.result) + ' Consumed:' + str(lineNode.consumeCount)
 
 def line(tokens):
-    exprNode = expr(tokens)
-    if exprNode.success:
-        if exprNode.consumeCount == len(tokens):
-            return exprNode
-        else
-            return ParseNode(False, 0, exprNode.consumeCount)
-
     assignNode = assign(tokens)
     if assignNode.success:
         if assignNode.consumeCount == len(tokens):
             return assignNode
-        else
+        else:
             return ParseNode(False, 0, assignNode.consumeCount)
-
+    exprNode = expr(tokens)
+    if exprNode.success:
+        if exprNode.consumeCount == len(tokens):
+            return exprNode
+        else:
+            return ParseNode(False, 0, exprNode.consumeCount)
     return ParseNode(False, 0, 0)
 
 def assign(tokens):
@@ -296,49 +310,92 @@ def assign(tokens):
         exprNode = expr(tokens[3:])
         if exprNode.consumeCount+3 == len(tokens):
             storeSymbol(tokens[1].attrib, exprNode.result)
-            return exprNode
+            return ParseNode(True, exprNode.result, exprNode.consumeCount+3)
         else:
             return ParseNode(False, 0, exprNode.consumeCount+3)
     else:
         return ParseNode(False, 0, 0)
 
 def expr(tokens):
-    None
+    funcNode = func(tokens)
+    if funcNode.success:
+        return funcNode
+    termNode = term(tokens)
+    if termNode.success:
+        return termNode
+    return ParseNode(False, 0, 0)
 
 def func(tokens):
     if map(getID, tokens[0:2]) == ['ident', 'lParen']:
         argsNode = args(tokens[2:])
-        if tokens[argsNode.consumeCount+2] == 'rParen':
-            return ParseNode(True, 'TODO', argsNode.consumeCount+3)
-        else
+        if tokens[argsNode.consumeCount+2].ID == 'rParen':
+            return ParseNode(True, argsNode.result, argsNode.consumeCount+3)
+        else:
             return ParseNode(False, 0, argsNode.consumeCount+2)
     else:
         return ParseNode(False, 0, 0)
 
+#def args(tokens):
+#    #returns a list of exprNodes to be used as function arguments
+#    nodes = []
+#    exprNode = expr(tokens)
+#    consumed = exprNode.consumeCount
+#    if exprNode.success:
+#        nodes.append(exprNode)
+#        while tokens[consumed].ID == 'comma':
+#            exprNode = expr(tokens[consumed:])
+#            consumed += exprNode.consumeCount
+#            if exprNode.success:
+#                nodes.append(exprNode)
+#            else:
+#                return ParseNode(False, 0, consumed)
+#        return ParseNode(True, nodes, consumed)
+#    else: 
+#        return ParseNode(False, 0, consumed)
+
 def args(tokens):
-    None
+    #returns a list of exprNodes to be used as function arguments
+    exprNode = expr(tokens)
+    consumed = exprNode.consumeCount
+    if exprNode.success:
+        foldNode = foldlParse(expr, snoc, 'comma', [exprNode.result], tokens[consumed:])
+        return ParseNode(foldNode.success, foldNode.result, consumed+foldNode.consumeCount)
+    else:
+        return ParseNode(False, 0, consumed)
 
 def term(tokens):
-    None
+    factNode = factor(tokens)
+    consumed = factNode.consumeCount
+    if factNode.success:
+        foldNode = foldlParseMult(factor, [lambda x,y:x*y, lambda x,y:x/y],
+                                  ['multiply', 'divide'], factNode.result,
+                                  tokens[consumed:])
+        return ParseNode(foldNode.success, foldNode.result, consumed+foldNode.consumeCount)
+    else:
+        return ParseNode(False, 0, consumed)
 
 def factor(tokens):
-    None
+    exptNode = expt(tokens)
+    consumed = exptNode.consumeCount
+    result = exptNode.result
+    if exptNode.success:
+        foldNode = foldlParse(expt, lambda x,y:x**y, 'exponent', result, tokens[consumed:])
+        return ParseNode(foldNode.success, foldNode.result, consumed+foldNode.consumeCount)
+    else:
+        return ParseNode(False, 0, consumed)
 
 def expt(tokens):
     token = tokens[0]
     if token.ID == 'ident':
         return ParseNode(True, lookupSymbol(token.attrib), 1)
-
     numberNode = number(tokens)
     if numberNode.success:
         return numberNode
-
     if token.ID == 'lParen':
         exprNode = expr(tokens[1:])
         if exprNode.success:
-            if tokens[exprNode.consumeCount+1] == 'rParen':
+            if tokens[exprNode.consumeCount+1].ID == 'rParen':
                 return ParseNode(True, exprNode.result, exprNode.consumeCount+2)
-    
     return ParseNode(False, 0, 0)
 
 def number(tokens):
@@ -353,10 +410,48 @@ def number(tokens):
         return ParseNode(False, 0, 0)
 
 def lookupSymbol(symbol):
-    return symbol
+    return 5
 
 def storeSymbol(symbol, value):
-    None
+    print str(symbol) + ':' + str(value)
+
+def foldlParse(parsefn, resfn, symbol, initial, tokens):
+    consumed = 0
+    result = initial
+    if tokens == []:
+        return ParseNode(True, result, consumed)
+    else:
+        while tokens[consumed].ID == symbol:
+            parseNode = parsefn(tokens[consumed+1:])
+            consumed += parseNode.consumeCount+1
+            if parseNode.success:
+                result = resfn(result, parseNode.result)
+                if consumed >= len(tokens): return ParseNode(True,result,consumed)
+            else:
+                return ParseNode(False, 0, consumed)
+        return ParseNode(True, result, consumed)
+
+def foldlParseMult(parsefn, resfns, syms, initial, tokens):
+    consumed = 0
+    result = initial
+    if tokens == []:
+        return ParseNode(True, result, consumed)
+    else:
+        while tokens[consumed].ID in syms:
+            sym = tokens[consumed].ID
+            parseNode = foldlParse(parsefn, resfns[syms.index(sym)], sym, result, tokens[consumed:])
+            if parseNode.success:
+                result = parseNode.result
+                consumed += parseNode.consumeCount
+                if consumed >= len(tokens): return ParseNode(True,result,consumed)
+            else:
+                return ParseNode(False, 0, consumed)
+        return ParseNode(True, result, consumed)
+
+def snoc(seq, x):  #TODO: find more pythonic way of doing this
+    a = seq
+    a.append(x)
+    return a
 
 EOF
 
