@@ -1,13 +1,14 @@
-"TODO: write documentation
 "TODO: finish off parser
 "TODO: implement symbol lookup table
 "TODO: present much friendlier error messages
-"TODO: fix tokenizer infinite loop
 "TODO: move most of the functionality to autoload script?
 "TODO: write all of the math functions including hex/dec/oct conversion
 "TODO: implement octal numbers
 "TODO: built-in help like taglist/NerdTree?
 "TODO: Arbitrary precision numbers!!!
+"TODO: write documentation
+"TODO: syntax highlighting
+"TODO: autoload script?
 
 "configurable options
 let g:GCalc_Title = "__GCALC__"
@@ -225,15 +226,18 @@ lexemes = [Lexeme('whitespace', r'\s+'),
 
 #takes an expression and uses the language lexemes
 #to produce a sequence of tokens
-def tokenize(expr):  #TODO: error handle -- don't infinite loop!!!
+def tokenize(expr):
     tokens = []
     while expr != "":
+        matchedLexeme = False
         for lexeme in lexemes:
             match = matchesFront(lexeme.regex, expr)
             if match != "":
                 tokens.append(Token(lexeme.ID, match))
                 expr = expr[len(match):]
+                matchedLexeme = True
                 break
+        if not matchedLexeme: return [Token('ERROR', expr)]
     return filter(lambda t: t.ID != 'whitespace', tokens)
 
 #returns the match if regex matches beginning of string
