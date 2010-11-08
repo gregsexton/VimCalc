@@ -208,8 +208,6 @@ lexemes = [Lexeme('whitespace', r'\s+'),
            Lexeme('mAssign',    r'\*='),
            Lexeme('sAssign',    r'-='),
            Lexeme('pAssign',    r'\+='),
-           Lexeme('decrement',  r'--'),
-           Lexeme('increment',  r'\+\+'),
            Lexeme('lShift',     r'<<'),
            Lexeme('rShift',     r'>>'),
            Lexeme('exponent',   r'\*\*'),
@@ -266,7 +264,7 @@ def getID(token):
 #gcalc context-free grammar
 #line    -> expr | assign
 #assign  -> let ident = expr
-#expr    -> expr + term | expr - term | expr ++ | expr -- | func | term
+#expr    -> expr + term | expr - term | func | term
 #func    -> ident ( args )
 #args    -> expr , args | expr
 #term    -> term * factor | term / factor | term % factor
@@ -275,10 +273,11 @@ def getID(token):
 #expt    -> number | ident | ( expr )
 #number  -> decnumber | hexnumber | octalnumber
 
-#gcalc context-free grammar LL(1) -- for use with a recursive descent parser
+#gcalc context-free grammar LL(1) -- to be used with a recursive descent parser
 #line    -> expr | assign
 #assign  -> let ident = expr
-#expr    -> func|term {(+|-) func|term}[++|--]
+#expr    -> expr' {(+|-) expr'}
+#expr'   -> func|term
 #func    -> ident ( args )
 #args    -> expr {, expr}
 #term    -> factor {(*|/|%|<<|>>) factor} [!]
@@ -337,7 +336,21 @@ def assign(tokens):
     else:
         return ParseNode(False, 0, 0)
 
-def expr(tokens):               #TODO: finish this function
+def expr(tokens):
+    exprNode = exprPrime(tokens)
+    consumed = exprNode.consumeCount
+    if exprNode.success:
+        foldNode = foldlParseMult(exprPrime,
+                                  [lambda x,y:x+y, lambda x,y:x-y],
+                                  ['plus','subtract'],
+                                  exprNode.result,
+                                  tokens[consumed:])
+        consumed += foldNode.consumeCount
+        return ParseNode(foldNode.success, foldNode.result, consumed)
+    else:
+        return ParseNode(False, 0, consumed)
+
+def exprPrime(tokens):
     funcNode = func(tokens)
     if funcNode.success:
         return funcNode
