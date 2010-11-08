@@ -349,7 +349,7 @@ def expr(tokens):               #TODO: finish this function
 def func(tokens):
     if map(getID, tokens[0:2]) == ['ident', 'lParen']:
         argsNode = args(tokens[2:])
-        if tokens[argsNode.consumeCount+2].ID == 'rParen':
+        if symbolCheck('rParen', argsNode.consumeCount+2, tokens):
             return ParseNode(True, argsNode.result, argsNode.consumeCount+3)
         else:
             return ParseNode(False, 0, argsNode.consumeCount+2)
@@ -366,17 +366,21 @@ def args(tokens):
     else:
         return ParseNode(False, 0, consumed)
 
-def term(tokens):               #TODO: add '!' operator
+def term(tokens):
     factNode = factor(tokens)
     consumed = factNode.consumeCount
     if factNode.success:
-        foldNode = foldlParseMult(factor, 
+        foldNode = foldlParseMult(factor, #TODO: change from int in lambdas
                                   [lambda x,y:x*y, lambda x,y:x/y, lambda x,y:x%y,
                                       lambda x,y:int(x)<<int(y), lambda x,y:int(x)>>int(y)],
                                   ['multiply', 'divide', 'modulo', 'lShift', 'rShift'],
                                   factNode.result,
                                   tokens[consumed:])
-        return ParseNode(foldNode.success, foldNode.result, consumed+foldNode.consumeCount)
+        consumed += foldNode.consumeCount
+        if symbolCheck('factorial', consumed, tokens):
+            return ParseNode(foldNode.success, factorial(foldNode.result), consumed+1)
+        else:
+            return ParseNode(foldNode.success, foldNode.result, consumed)
     else:
         return ParseNode(False, 0, consumed)
 
@@ -391,13 +395,12 @@ def factor(tokens):
         return ParseNode(False, 0, consumed)
 
 def expt(tokens):
-    token = tokens[0]
-    if token.ID == 'ident':
-        return ParseNode(True, lookupSymbol(token.attrib), 1)
+    if symbolCheck('ident', 0, tokens):
+        return ParseNode(True, lookupSymbol(tokens[0].attrib), 1)
     numberNode = number(tokens)
     if numberNode.success:
         return numberNode
-    if token.ID == 'lParen':
+    if symbolCheck('lParen', 0, tokens):
         exprNode = expr(tokens[1:])
         if exprNode.success:
             if tokens[exprNode.consumeCount+1].ID == 'rParen':
@@ -405,13 +408,12 @@ def expt(tokens):
     return ParseNode(False, 0, 0)
 
 def number(tokens):
-    token = tokens[0]
-    if token.ID == 'decnumber':
-        return ParseNode(True, float(token.attrib), 1)
-    elif token.ID == 'hexnumber':
-        return ParseNode(True, long(token.attrib,16), 1)
-    elif token.ID == 'octnumber':
-        return ParseNode(True, long(token.attrib,8), 1)
+    if symbolCheck('decnumber', 0, tokens):
+        return ParseNode(True, float(tokens[0].attrib), 1)
+    elif symbolCheck('hexnumber', 0, tokens):
+        return ParseNode(True, long(tokens[0].attrib,16), 1)
+    elif symbolCheck('octnumber', 0, tokens):
+        return ParseNode(True, long(tokens[0].attrib,8), 1)
     else:
         return ParseNode(False, 0, 0)
 
@@ -450,6 +452,12 @@ def foldlParseMult(parsefn, resfns, syms, initial, tokens):
                 return ParseNode(False, 0, consumed)
         return ParseNode(True, result, consumed)
 
+def symbolCheck(symbol, index, tokens):
+    if index < len(tokens):
+        if tokens[index].ID == symbol:
+            return True
+    return False
+
 def snoc(seq, x):  #TODO: find more pythonic way of doing this
     a = seq
     a.append(x)
@@ -465,6 +473,13 @@ def storeSymbol(symbol, value):
 
 
 #### mathematical functions (built-ins) ############################################
+
+def factorial(n):
+    acc = 1
+    for i in xrange(int(n)): #TODO: change from int
+        acc *= i+1
+    return acc
+
 
 EOF
 
