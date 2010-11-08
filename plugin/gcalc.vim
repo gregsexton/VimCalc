@@ -8,7 +8,6 @@
 "TODO: Arbitrary precision numbers!!!
 "TODO: write documentation
 "TODO: syntax highlighting
-"TODO: autoload script?
 
 "configurable options
 let g:GCalc_Title = "__GCALC__"
@@ -108,8 +107,11 @@ python << EOF
 
 import vim, math, cmath, re
 
+#global symbol table
+GCALC_SYMBOL_TABLE = {'ans':0}
+
 def repl(expr):
-    result = str(parse(expr))
+    result = parse(expr)
     vim.command("call append(line('$'), \"" + result + "\")")
 
 #### syntactic analysis functions ##################################################
@@ -263,7 +265,7 @@ def getID(token):
 
 #gcalc context-free grammar
 #line    -> expr | assign
-#assign  -> let ident = expr
+#assign  -> let ident = expr #TODO: finish this part of the grammar
 #expr    -> expr + term | expr - term | func | term
 #func    -> ident ( args )
 #args    -> expr , args | expr
@@ -290,15 +292,28 @@ class ParseNode(object):
         self._success = success
         self._result = result
         self._consumedTokens = consumedTokens
+        self._storeInAns = True
+        self._assignedSymbol = ''
     def getSuccess(self):
         return self._success
     def getResult(self):
         return self._result
     def getConsumed(self):
         return self._consumedTokens
+    def getStoreInAns(self):
+        return self._storeInAns
+    def setStoreInAns(self, val):
+        self._storeInAns = val
+    def getAssignedSymbol(self):
+        return self._assignedSymbol
+    def setAssignedSymbol(self, val):
+        self._assignedSymbol = val
     success = property(getSuccess, doc='Successfully evaluated?')
     result = property(getResult, doc='The evaluated result at this node.')
     consumeCount = property(getConsumed, doc='Number of consumed tokens.')
+    storeInAns = property(getStoreInAns, setStoreInAns, doc='Should store in ans variable?')
+    assignedSymbol = property(getAssignedSymbol, setAssignedSymbol,
+                              doc='Symbol expression assigned to.')
 
 #recursive descent parser -- simple and befitting the needs of this small program
 #generates the parse tree with evaluated decoration
@@ -306,7 +321,11 @@ def parse(expr):
     tokens = tokenize(expr)
     lineNode = line(tokens)
     if lineNode.success:
-        return lineNode.result
+        if lineNode.storeInAns:
+            storeSymbol('ans', lineNode.result)
+            return 'ans = ' + str(lineNode.result)
+        else:
+            return lineNode.assignedSymbol + ' = ' + str(lineNode.result)
     else:
         return "Error: Result:" + str(lineNode.result) + ' Consumed:' + str(lineNode.consumeCount)
 
@@ -329,8 +348,12 @@ def assign(tokens):
     if map(getID, tokens[0:3]) == ['let', 'ident', 'assign']:
         exprNode = expr(tokens[3:])
         if exprNode.consumeCount+3 == len(tokens):
-            storeSymbol(tokens[1].attrib, exprNode.result)
-            return ParseNode(True, exprNode.result, exprNode.consumeCount+3)
+            symbol = tokens[1].attrib
+            storeSymbol(symbol, exprNode.result)
+            node = ParseNode(True, exprNode.result, exprNode.consumeCount+3)
+            node.storeInAns = False
+            node.assignedSymbol = symbol
+            return node
         else:
             return ParseNode(False, 0, exprNode.consumeCount+3)
     else:
@@ -479,10 +502,13 @@ def snoc(seq, x):  #TODO: find more pythonic way of doing this
 #### symbol table manipulation functions ###########################################
 
 def lookupSymbol(symbol):
-    return 5
+    if GCALC_SYMBOL_TABLE.has_key(symbol):
+        return GCALC_SYMBOL_TABLE[symbol]
+    else:
+        return 0 #TODO: some kind of error with handling?
 
 def storeSymbol(symbol, value):
-    print str(symbol) + ':' + str(value)
+    GCALC_SYMBOL_TABLE[symbol] = value
 
 
 #### mathematical functions (built-ins) ############################################
