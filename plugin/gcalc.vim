@@ -1,13 +1,12 @@
-"TODO: finish off parser
-"TODO: implement symbol lookup table
-"TODO: present much friendlier error messages
-"TODO: move most of the functionality to autoload script?
+"TODO: finish off parser, assignment, eyeball, test
 "TODO: write all of the math functions including hex/dec/oct conversion
 "TODO: implement octal numbers
-"TODO: built-in help like taglist/NerdTree?
+"TODO: present much friendlier error messages
 "TODO: Arbitrary precision numbers!!!
-"TODO: write documentation
 "TODO: syntax highlighting
+"TODO: write documentation
+"TODO: built-in help like taglist/NerdTree?
+"TODO: move most of the functionality to autoload script?
 
 "configurable options
 let g:GCalc_Title = "__GCALC__"
@@ -106,9 +105,6 @@ if has('python')
 python << EOF
 
 import vim, math, cmath, re
-
-#global symbol table
-GCALC_SYMBOL_TABLE = {'ans':0}
 
 def repl(expr):
     result = parse(expr)
@@ -386,7 +382,8 @@ def func(tokens):
     if map(getID, tokens[0:2]) == ['ident', 'lParen']:
         argsNode = args(tokens[2:])
         if symbolCheck('rParen', argsNode.consumeCount+2, tokens):
-            return ParseNode(True, argsNode.result, argsNode.consumeCount+3)
+            result = apply(lookupFunc(tokens[0].attrib), argsNode.result)
+            return ParseNode(True, result, argsNode.consumeCount+3)
         else:
             return ParseNode(False, 0, argsNode.consumeCount+2)
     else:
@@ -501,6 +498,9 @@ def snoc(seq, x):  #TODO: find more pythonic way of doing this
 
 #### symbol table manipulation functions ###########################################
 
+#global symbol table
+GCALC_SYMBOL_TABLE = {'ans':0}
+
 def lookupSymbol(symbol):
     if GCALC_SYMBOL_TABLE.has_key(symbol):
         return GCALC_SYMBOL_TABLE[symbol]
@@ -512,6 +512,17 @@ def storeSymbol(symbol, value):
 
 
 #### mathematical functions (built-ins) ############################################
+
+#global built-in function table 
+#variables do not share the same namespace as functions
+
+GCALC_FUNCTION_TABLE = {'sqrt':math.sqrt}
+
+def lookupFunc(symbol):
+    if GCALC_FUNCTION_TABLE.has_key(symbol):
+        return GCALC_FUNCTION_TABLE[symbol]
+    else:
+        return 0 #TODO: find something sensible or error handle
 
 def factorial(n):
     acc = 1
