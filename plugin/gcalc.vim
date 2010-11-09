@@ -1,8 +1,8 @@
-"TODO: implement octal numbers
-"TODO: finish off parser, assignment, eyeball, test
-"TODO: write all of the math functions including hex/dec/oct conversion
 "TODO: present much friendlier error messages
+"TODO: implement octal numbers
+"TODO: write all of the math functions including hex/dec/oct conversion
 "TODO: Arbitrary precision numbers!!!
+"TODO: negative numbers!!!!!!!
 "TODO: syntax highlighting
 "TODO: write documentation
 "TODO: built-in help like taglist/NerdTree?
@@ -58,6 +58,8 @@ function! s:GCalc_Open()
     nnoremap <buffer> <silent> o :call <SID>GCalc_JumpToPrompt()<CR>
     nnoremap <buffer> <silent> O :call <SID>GCalc_JumpToPrompt()<CR>
 
+    "TODO: don't allow deleting lines
+
     call setline(1, g:GCalc_Prompt)
     startinsert!
 endfunction
@@ -107,10 +109,11 @@ python << EOF
 import vim, math, cmath, re
 
 def repl(expr):
-    result = parse(expr)
-    vim.command("call append(line('$'), \"" + result + "\")")
+    if expr != "":
+        result = parse(expr)
+        vim.command("call append(line('$'), \"" + result + "\")")
 
-#### syntactic analysis functions ##################################################
+#### lexical analysis functions ##################################################
 
 #lexemes
 #digit  = [0-9]
@@ -222,11 +225,11 @@ lexemes = [Lexeme('whitespace', r'\s+'),
 #to produce a sequence of tokens
 def tokenize(expr):
     tokens = []
-    while expr != "":
+    while expr != '':
         matchedLexeme = False
         for lexeme in lexemes:
             match = matchesFront(lexeme.regex, expr)
-            if match != "":
+            if match != '':
                 tokens.append(Token(lexeme.ID, match))
                 expr = expr[len(match):]
                 matchedLexeme = True
@@ -242,7 +245,7 @@ def matchesFront(regex, string):
     if m:
         return m.group()
     else:
-        return ""
+        return ''
 
 #useful for testing tokenize with map(...)
 def getAttrib(token):
@@ -318,6 +321,8 @@ class ParseNode(object):
 #generates the parse tree with evaluated decoration
 def parse(expr):
     tokens = tokenize(expr)
+    if symbolCheck('ERROR', 0, tokens):
+        return 'Syntax error: ' + tokens[0].attrib
     lineNode = line(tokens)
     if lineNode.success:
         if lineNode.storeInAns:
@@ -326,7 +331,7 @@ def parse(expr):
         else:
             return lineNode.assignedSymbol + ' = ' + str(lineNode.result)
     else:
-        return "Error: Result:" + str(lineNode.result) + ' Consumed:' + str(lineNode.consumeCount)
+        return 'Parse error: Consumed:' + str(lineNode.consumeCount)
 
 def line(tokens):
     assignNode = assign(tokens)
@@ -366,7 +371,7 @@ def assign(tokens):
             elif symbolCheck('expAssign', 2, tokens):
                 result = result ** exprNode.result
             else:
-                return ParseNode(False,0,0)
+                return ParseNode(False,0,2)
 
             storeSymbol(symbol, result)
             node = ParseNode(True, result, exprNode.consumeCount+3)
@@ -403,12 +408,14 @@ def exprPrime(tokens):
 
 def func(tokens):
     if map(getID, tokens[0:2]) == ['ident', 'lParen']:
+        sym = tokens[0].attrib
         argsNode = args(tokens[2:])
         if symbolCheck('rParen', argsNode.consumeCount+2, tokens):
-            result = apply(lookupFunc(tokens[0].attrib), argsNode.result)
+            result = apply(lookupFunc(sym), argsNode.result)
             return ParseNode(True, result, argsNode.consumeCount+3)
         else:
-            return ParseNode(False, 0, argsNode.consumeCount+2)
+            error = 'Missing matching parenthesis for function ' + sym + '.'
+            return ParseNode(False, error, argsNode.consumeCount+2)
     else:
         return ParseNode(False, 0, 0)
 
@@ -459,8 +466,11 @@ def expt(tokens):
     if symbolCheck('lParen', 0, tokens):
         exprNode = expr(tokens[1:])
         if exprNode.success:
-            if tokens[exprNode.consumeCount+1].ID == 'rParen':
+            if symbolCheck('rParen', exprNode.consumeCount+1, tokens):
                 return ParseNode(True, exprNode.result, exprNode.consumeCount+2)
+            else:
+                error = 'Missing matching parenthesis in expression.'
+                return ParseNode(False, error, exprNode.consumeCount+1)
     return ParseNode(False, 0, 0)
 
 def number(tokens):
