@@ -56,8 +56,8 @@ function! s:GCalc_Open()
     inoremap <buffer> <silent> <CR> <C-o>:call <SID>GCalc_REPL(1)<CR>
 
     "don't allow inserting new lines
-    nnoremap <buffer> <silent> o :call <SID>GCalc_JumpToPrompt()<CR>
-    nnoremap <buffer> <silent> O :call <SID>GCalc_JumpToPrompt()<CR>
+    nnoremap <buffer> <silent> o :call <SID>GCalc_JumpToPrompt(1)<CR>
+    nnoremap <buffer> <silent> O :call <SID>GCalc_JumpToPrompt(1)<CR>
 
     "TODO: don't allow deleting lines
 
@@ -89,14 +89,14 @@ function! s:GCalc_REPL(continueInsert)
     "let failed = append(line('$'), expr)
     let failed = append(line('$'), g:GCalc_Prompt)
 
-    if a:continueInsert == 1
-        call <SID>GCalc_JumpToPrompt()
-    endif
+    call <SID>GCalc_JumpToPrompt(a:continueInsert)
 endfunction
 
-function! s:GCalc_JumpToPrompt()
+function! s:GCalc_JumpToPrompt(withInsert)
     call setpos(".", [0, line('$'), col('$'), 0])
-    startinsert!
+    if a:withInsert == 1
+        startinsert!
+    endif
 endfunction
 
 " **********************************************************************************************************
