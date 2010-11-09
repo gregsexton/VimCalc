@@ -1,4 +1,3 @@
-"TODO: present much friendlier error messages
 "TODO: implement octal numbers
 "TODO: write all of the math functions including hex/dec/oct conversion
 "TODO: Arbitrary precision numbers!!!
@@ -7,6 +6,8 @@
 "TODO: write documentation
 "TODO: built-in help like taglist/NerdTree?
 "TODO: move most of the functionality to autoload script?
+"TODO: catch all exceptions?
+"TODO: up and down arrows to repeat expressions?
 
 "configurable options
 let g:GCalc_Title = "__GCALC__"
@@ -317,21 +318,35 @@ class ParseNode(object):
     assignedSymbol = property(getAssignedSymbol, setAssignedSymbol,
                               doc='Symbol expression assigned to.')
 
+class ParseException(Exception):
+    def __init__(self, message, consumedTokens):
+        self._message = message
+        self._consumed = consumedTokens
+    def getMessage(self):
+        return self._message
+    def getConsumed(self):
+        return self._consumed
+    message = property(getMessage)
+    consumed = property(getConsumed)
+
 #recursive descent parser -- simple and befitting the needs of this small program
 #generates the parse tree with evaluated decoration
 def parse(expr):
     tokens = tokenize(expr)
     if symbolCheck('ERROR', 0, tokens):
         return 'Syntax error: ' + tokens[0].attrib
-    lineNode = line(tokens)
-    if lineNode.success:
-        if lineNode.storeInAns:
-            storeSymbol('ans', lineNode.result)
-            return 'ans = ' + str(lineNode.result)
+    try:
+        lineNode = line(tokens)
+        if lineNode.success:
+            if lineNode.storeInAns:
+                storeSymbol('ans', lineNode.result)
+                return 'ans = ' + str(lineNode.result)
+            else:
+                return lineNode.assignedSymbol + ' = ' + str(lineNode.result)
         else:
-            return lineNode.assignedSymbol + ' = ' + str(lineNode.result)
-    else:
-        return 'Parse error: Consumed:' + str(lineNode.consumeCount)
+            return 'Parse error: the expression is invalid.'
+    except ParseException, pe:
+        return 'Parse error: ' + pe.message
 
 def line(tokens):
     assignNode = assign(tokens)
@@ -353,25 +368,26 @@ def assign(tokens):
         exprNode = expr(tokens[3:])
         if exprNode.consumeCount+3 == len(tokens):
             symbol = tokens[1].attrib
-            result = lookupSymbol(symbol) #defaults to 0
 
             #perform type of assignment
             if symbolCheck('assign', 2, tokens):
                 result = exprNode.result
-            elif symbolCheck('pAssign', 2, tokens):
-                result = result + exprNode.result
-            elif symbolCheck('sAssign', 2, tokens):
-                result = result - exprNode.result
-            elif symbolCheck('mAssign', 2, tokens):
-                result = result * exprNode.result
-            elif symbolCheck('dAssign', 2, tokens):
-                result = result / exprNode.result
-            elif symbolCheck('modAssign', 2, tokens):
-                result = result % exprNode.result
-            elif symbolCheck('expAssign', 2, tokens):
-                result = result ** exprNode.result
             else:
-                return ParseNode(False,0,2)
+                result = lookupSymbol(symbol)
+                if symbolCheck('pAssign', 2, tokens):
+                    result = result + exprNode.result
+                elif symbolCheck('sAssign', 2, tokens):
+                    result = result - exprNode.result
+                elif symbolCheck('mAssign', 2, tokens):
+                    result = result * exprNode.result
+                elif symbolCheck('dAssign', 2, tokens):
+                    result = result / exprNode.result
+                elif symbolCheck('modAssign', 2, tokens):
+                    result = result % exprNode.result
+                elif symbolCheck('expAssign', 2, tokens):
+                    result = result ** exprNode.result
+                else:
+                    return ParseNode(False,0,2)
 
             storeSymbol(symbol, result)
             node = ParseNode(True, result, exprNode.consumeCount+3)
@@ -411,11 +427,13 @@ def func(tokens):
         sym = tokens[0].attrib
         argsNode = args(tokens[2:])
         if symbolCheck('rParen', argsNode.consumeCount+2, tokens):
-            result = apply(lookupFunc(sym), argsNode.result)
+            try: result = apply(lookupFunc(sym), argsNode.result)
+            except TypeError, e: raise ParseException, (str(e), argsNode.consumeCount+3)
+            except ValueError, e: raise ParseException, (str(e), argsNode.consumeCount+3)
             return ParseNode(True, result, argsNode.consumeCount+3)
         else:
-            error = 'Missing matching parenthesis for function ' + sym + '.'
-            return ParseNode(False, error, argsNode.consumeCount+2)
+            error = 'missing matching parenthesis for function ' + sym + '.'
+            raise ParseException, (error, argsNode.consumeCount+2)
     else:
         return ParseNode(False, 0, 0)
 
@@ -469,8 +487,8 @@ def expt(tokens):
             if symbolCheck('rParen', exprNode.consumeCount+1, tokens):
                 return ParseNode(True, exprNode.result, exprNode.consumeCount+2)
             else:
-                error = 'Missing matching parenthesis in expression.'
-                return ParseNode(False, error, exprNode.consumeCount+1)
+                error = 'missing matching parenthesis in expression.'
+                raise ParseException, (error, exprNode.consumeCount+1)
     return ParseNode(False, 0, 0)
 
 def number(tokens):
@@ -538,7 +556,8 @@ def lookupSymbol(symbol):
     if GCALC_SYMBOL_TABLE.has_key(symbol):
         return GCALC_SYMBOL_TABLE[symbol]
     else:
-        return 0 #TODO: some kind of error with handling?
+        error = "symbol '" + symbol + "' is not defined."
+        raise ParseException, (error, 0)
 
 def storeSymbol(symbol, value):
     GCALC_SYMBOL_TABLE[symbol] = value
@@ -555,7 +574,8 @@ def lookupFunc(symbol):
     if GCALC_FUNCTION_TABLE.has_key(symbol):
         return GCALC_FUNCTION_TABLE[symbol]
     else:
-        return 0 #TODO: find something sensible or error handle
+        error = "built-in function '" + symbol + "' does not exist."
+        raise ParseException, (error, 0)
 
 def factorial(n):
     acc = 1
