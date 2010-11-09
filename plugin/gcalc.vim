@@ -1,6 +1,6 @@
+"TODO: implement octal numbers
 "TODO: finish off parser, assignment, eyeball, test
 "TODO: write all of the math functions including hex/dec/oct conversion
-"TODO: implement octal numbers
 "TODO: present much friendlier error messages
 "TODO: Arbitrary precision numbers!!!
 "TODO: syntax highlighting
@@ -145,10 +145,8 @@ def repl(expr):
 #lShift    = '<<'
 #rShift    = '>>'
 #factorial = '!'
-#increment = '++'
-#decrement = '--'
 
-#unaryOp  = factorial|increment|decrement
+#unaryOp  = factorial
 #binaryOp = plus|subtract|multiply|divide|modulo|exponent|lShift|rShift
 #operator = unaryOp|binaryOp
 
@@ -261,7 +259,8 @@ def getID(token):
 
 #gcalc context-free grammar
 #line    -> expr | assign
-#assign  -> let ident = expr #TODO: finish this part of the grammar
+#assign  -> let ident = expr | let ident += expr | let ident -= expr 
+#           | let ident *= expr | let ident /= expr | let ident %= expr | let ident **= expr
 #expr    -> expr + term | expr - term | func | term
 #func    -> ident ( args )
 #args    -> expr , args | expr
@@ -273,7 +272,7 @@ def getID(token):
 
 #gcalc context-free grammar LL(1) -- to be used with a recursive descent parser
 #line    -> expr | assign
-#assign  -> let ident = expr
+#assign  -> let ident (=|+=|-=|*=|/=|%=|**=) expr
 #expr    -> expr' {(+|-) expr'}
 #expr'   -> func|term
 #func    -> ident ( args )
@@ -304,10 +303,14 @@ class ParseNode(object):
         return self._assignedSymbol
     def setAssignedSymbol(self, val):
         self._assignedSymbol = val
-    success = property(getSuccess, doc='Successfully evaluated?')
-    result = property(getResult, doc='The evaluated result at this node.')
-    consumeCount = property(getConsumed, doc='Number of consumed tokens.')
-    storeInAns = property(getStoreInAns, setStoreInAns, doc='Should store in ans variable?')
+    success = property(getSuccess,
+                       doc='Successfully evaluated?')
+    result = property(getResult,
+                      doc='The evaluated result at this node.')
+    consumeCount = property(getConsumed,
+                            doc='Number of consumed tokens.')
+    storeInAns = property(getStoreInAns, setStoreInAns,
+                          doc='Should store in ans variable?')
     assignedSymbol = property(getAssignedSymbol, setAssignedSymbol,
                               doc='Symbol expression assigned to.')
 
@@ -341,12 +344,32 @@ def line(tokens):
     return ParseNode(False, 0, 0)
 
 def assign(tokens):
-    if map(getID, tokens[0:3]) == ['let', 'ident', 'assign']:
+    if map(getID, tokens[0:2]) == ['let', 'ident']:
         exprNode = expr(tokens[3:])
         if exprNode.consumeCount+3 == len(tokens):
             symbol = tokens[1].attrib
-            storeSymbol(symbol, exprNode.result)
-            node = ParseNode(True, exprNode.result, exprNode.consumeCount+3)
+            result = lookupSymbol(symbol) #defaults to 0
+
+            #perform type of assignment
+            if symbolCheck('assign', 2, tokens):
+                result = exprNode.result
+            elif symbolCheck('pAssign', 2, tokens):
+                result = result + exprNode.result
+            elif symbolCheck('sAssign', 2, tokens):
+                result = result - exprNode.result
+            elif symbolCheck('mAssign', 2, tokens):
+                result = result * exprNode.result
+            elif symbolCheck('dAssign', 2, tokens):
+                result = result / exprNode.result
+            elif symbolCheck('modAssign', 2, tokens):
+                result = result % exprNode.result
+            elif symbolCheck('expAssign', 2, tokens):
+                result = result ** exprNode.result
+            else:
+                return ParseNode(False,0,0)
+
+            storeSymbol(symbol, result)
+            node = ParseNode(True, result, exprNode.consumeCount+3)
             node.storeInAns = False
             node.assignedSymbol = symbol
             return node
@@ -514,7 +537,7 @@ def storeSymbol(symbol, value):
 #### mathematical functions (built-ins) ############################################
 
 #global built-in function table 
-#variables do not share the same namespace as functions
+#NOTE: variables do not share the same namespace as functions
 
 GCALC_FUNCTION_TABLE = {'sqrt':math.sqrt}
 
