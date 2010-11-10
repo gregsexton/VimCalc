@@ -9,6 +9,7 @@
 "TODO: up and down arrows to repeat expressions?
 "TODO: testing for a 1.0 release!!
 "TODO: interpreter directives (e.g :dec or :hex)
+"TODO: licensing headers
 
 "configurable options
 let g:VCalc_Title = "__VCALC__"
@@ -197,7 +198,7 @@ class Lexeme(object):
     ID = property(getID, doc='Lexeme ID [string].')
     regex = property(getRegex, doc='Regex to match the Lexeme.')
 
-#language lexemes
+#language lexemes NOTE: don't change these without changing syntax file
 lexemes = [Lexeme('whitespace', r'\s+'),
            Lexeme('hexnumber',  r'0x[0-9a-fA-F]+'),
            Lexeme('octnumber',  r'0[0-7]+'),
@@ -577,6 +578,7 @@ def log2(n):
 def nrt(x,y):
     return x**(1/y)
 
+#NOTE: if you change the name or add a function remember to update the syntax file
 VCALC_FUNCTION_TABLE = {
         'abs'   : math.fabs,
         'acos'  : math.acos,
