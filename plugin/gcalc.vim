@@ -266,25 +266,24 @@ def getID(token):
 #line    -> expr | assign
 #assign  -> let ident = expr | let ident += expr | let ident -= expr 
 #           | let ident *= expr | let ident /= expr | let ident %= expr | let ident **= expr
-#expr    -> expr + term | expr - term | func | term
+#expr    -> expr + term | expr - term | term
 #func    -> ident ( args )
 #args    -> expr , args | expr
 #term    -> term * factor | term / factor | term % factor
 #           | term << factor | term >> factor | term ! | factor
 #factor  -> expt ** factor | expt
-#expt    -> number | ident | ( expr )
+#expt    -> number | func | ident | ( expr )
 #number  -> decnumber | hexnumber | octalnumber
 
 #gcalc context-free grammar LL(1) -- to be used with a recursive descent parser
 #line    -> expr | assign
 #assign  -> let ident (=|+=|-=|*=|/=|%=|**=) expr
-#expr    -> expr' {(+|-) expr'}
-#expr'   -> func|term
+#expr    -> term {(+|-) term}
 #func    -> ident ( args )
 #args    -> expr {, expr}
 #term    -> factor {(*|/|%|<<|>>) factor} [!]
 #factor  -> expt {** expt}
-#expt    -> number | ident | ( expr )
+#expt    -> number | func | ident | ( expr )
 #number  -> decnumber | hexnumber | octalnumber
 
 class ParseNode(object):
@@ -401,27 +400,18 @@ def assign(tokens):
         return ParseNode(False, 0, 0)
 
 def expr(tokens):
-    exprNode = exprPrime(tokens)
-    consumed = exprNode.consumeCount
-    if exprNode.success:
-        foldNode = foldlParseMult(exprPrime,
+    termNode = term(tokens)
+    consumed = termNode.consumeCount
+    if termNode.success:
+        foldNode = foldlParseMult(term,
                                   [lambda x,y:x+y, lambda x,y:x-y],
                                   ['plus','subtract'],
-                                  exprNode.result,
+                                  termNode.result,
                                   tokens[consumed:])
         consumed += foldNode.consumeCount
         return ParseNode(foldNode.success, foldNode.result, consumed)
     else:
         return ParseNode(False, 0, consumed)
-
-def exprPrime(tokens):
-    funcNode = func(tokens)
-    if funcNode.success:
-        return funcNode
-    termNode = term(tokens)
-    if termNode.success:
-        return termNode
-    return ParseNode(False, 0, 0)
 
 def func(tokens):
     if map(getID, tokens[0:2]) == ['ident', 'lParen']:
@@ -480,6 +470,9 @@ def factor(tokens):
         return ParseNode(False, 0, consumed)
 
 def expt(tokens):
+    funcNode = func(tokens)
+    if funcNode.success:
+        return funcNode
     if symbolCheck('ident', 0, tokens):
         return ParseNode(True, lookupSymbol(tokens[0].attrib), 1)
     numberNode = number(tokens)
