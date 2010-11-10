@@ -2,7 +2,7 @@
 "TODO: Arbitrary precision numbers!!!
 "TODO: negative numbers!!!!!!!
 "TODO: syntax highlighting
-"TODO: write documentation
+"TODO: write documentation (include notes)
 "TODO: built-in help like taglist/NerdTree?
 "TODO: move most of the functionality to autoload script?
 "TODO: catch all exceptions?
@@ -107,7 +107,7 @@ if has('python')
 
 python << EOF
 
-import vim, math, cmath, re
+import vim, math, re, random
 
 def repl(expr):
     if expr != "":
@@ -428,10 +428,13 @@ def func(tokens):
         sym = tokens[0].attrib
         argsNode = args(tokens[2:])
         if symbolCheck('rParen', argsNode.consumeCount+2, tokens):
-            try: result = apply(lookupFunc(sym), argsNode.result)
-            except TypeError, e: raise ParseException, (str(e), argsNode.consumeCount+3)
-            except ValueError, e: raise ParseException, (str(e), argsNode.consumeCount+3)
-            return ParseNode(True, result, argsNode.consumeCount+3)
+            try:
+                result = apply(lookupFunc(sym), argsNode.result)
+                return ParseNode(True, result, argsNode.consumeCount+3)
+            except TypeError, e:
+                raise ParseException, (str(e), argsNode.consumeCount+3)
+            except ValueError, e:
+                raise ParseException, (str(e), argsNode.consumeCount+3)
         else:
             error = 'missing matching parenthesis for function ' + sym + '.'
             raise ParseException, (error, argsNode.consumeCount+2)
@@ -446,7 +449,7 @@ def args(tokens):
         foldNode = foldlParse(expr, snoc, 'comma', [exprNode.result], tokens[consumed:])
         return ParseNode(foldNode.success, foldNode.result, consumed+foldNode.consumeCount)
     else:
-        return ParseNode(False, 0, consumed)
+        return ParseNode(False, [], consumed)
 
 def term(tokens):
     factNode = factor(tokens)
@@ -550,8 +553,10 @@ def snoc(seq, x):  #TODO: find more pythonic way of doing this
 
 #### symbol table manipulation functions ###########################################
 
-#global symbol table
-GCALC_SYMBOL_TABLE = {'ans':0}
+#global symbol table  #TODO: include phi?
+GCALC_SYMBOL_TABLE = {'ans':0,
+                      'e':math.e,
+                      'pi':math.pi} #NOTE: these can be rebound
 
 def lookupSymbol(symbol):
     if GCALC_SYMBOL_TABLE.has_key(symbol):
@@ -569,7 +574,47 @@ def storeSymbol(symbol, value):
 #global built-in function table 
 #NOTE: variables do not share the same namespace as functions
 
-GCALC_FUNCTION_TABLE = {'sqrt':math.sqrt}
+def loge(n):
+    return math.log(n)
+
+def log2(n):
+    return math.log(n, 2)
+
+def nrt(x,y):
+    return sqrt(x) #TODO:
+
+GCALC_FUNCTION_TABLE = {
+        'abs'   : math.fabs,
+        'acos'  : math.acos,
+        'asin'  : math.asin,
+        'atan'  : math.atan,
+        'atan2' : math.atan2,
+        'ceil'  : math.ceil,
+        'cos'   : math.cos,
+        'cosh'  : math.cosh,
+        'deg'   : math.degrees,
+        'exp'   : math.exp,
+        'floor' : math.floor,
+        'hypot' : math.hypot,
+        'inv'   : lambda n: 1/n,
+        'ldexp' : math.ldexp,
+        'lg'    : log2,
+        'ln'    : loge,
+        'log'   : math.log, #allows arbitrary base, defaults to e
+        'log10' : math.log10,
+        'max'   : max,
+        'min'   : min,
+        'nrt'   : nrt,
+        'pow'   : math.pow,
+        'rad'   : math.radians,
+        'rand'  : random.random, #random() -> x in the interval [0, 1).
+        'round' : round,
+        'sin'   : math.sin,
+        'sinh'  : math.sinh,
+        'sqrt'  : math.sqrt,
+        'tan'   : math.tan,
+        'tanh'  : math.tanh
+        }
 
 def lookupFunc(symbol):
     if GCALC_FUNCTION_TABLE.has_key(symbol):
@@ -583,7 +628,6 @@ def factorial(n):
     for i in xrange(int(n)): #TODO: change from int
         acc *= i+1
     return acc
-
 
 EOF
 
