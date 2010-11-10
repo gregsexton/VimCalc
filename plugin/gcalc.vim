@@ -3,28 +3,29 @@
 "TODO: negative numbers!!!!!!!
 "TODO: syntax highlighting
 "TODO: write documentation (include notes)
-"TODO: built-in help like taglist/NerdTree?
+"TODO: built-in function reference
 "TODO: move most of the functionality to autoload script?
 "TODO: catch all exceptions?
 "TODO: up and down arrows to repeat expressions?
 "TODO: testing for a 1.0 release!!
+"TODO: interpreter directives (e.g :dec or :hex)
 
 "configurable options
-let g:GCalc_Title = "__GCALC__"
-let g:GCalc_Prompt = "> "
-let g:GCalc_Win_Size = 10
+let g:VCalc_Title = "__VCALC__"
+let g:VCalc_Prompt = "> "
+let g:VCalc_Win_Size = 10
 
-command! -nargs=0 -bar Calc call s:GCalc_Open()
+command! -nargs=0 -bar Calc call s:VCalc_Open()
 
-function! s:GCalc_Open()
+function! s:VCalc_Open()
     "validate
-    let valid = <SID>GCalc_ValidateVim()
+    let valid = <SID>VCalc_ValidateVim()
     if valid == -1
         return
     endif
 
     "if the window is open, jump to it
-    let winnum = bufwinnr(g:GCalc_Title)
+    let winnum = bufwinnr(g:VCalc_Title)
     if winnum != -1
         "jump to the existing window
         if winnr() != winnum
@@ -34,13 +35,13 @@ function! s:GCalc_Open()
     endif
 
     "if the buffer already exists edit otherwise create.
-    let bufnum = bufnr(g:GCalc_Title)
+    let bufnum = bufnr(g:VCalc_Title)
     if bufnum == -1
-        let wcmd = g:GCalc_Title
+        let wcmd = g:VCalc_Title
     else
         let wcmd = '+buffer' . bufnum
     endif
-    exe 'silent! ' . g:GCalc_Win_Size . 'new ' . wcmd
+    exe 'silent! ' . g:VCalc_Win_Size . 'new ' . wcmd
 
     "set options
     silent! setlocal buftype=nofile
@@ -49,50 +50,50 @@ function! s:GCalc_Open()
     silent! setlocal bufhidden=delete
     silent! setlocal nonumber
     silent! setlocal nowrap
-    setlocal filetype=gregcalc
+    setlocal filetype=vimcalc
 
     "set mappings
-    nnoremap <buffer> <silent> <CR> :call <SID>GCalc_REPL(0)<CR>
-    inoremap <buffer> <silent> <CR> <C-o>:call <SID>GCalc_REPL(1)<CR>
+    nnoremap <buffer> <silent> <CR> :call <SID>VCalc_REPL(0)<CR>
+    inoremap <buffer> <silent> <CR> <C-o>:call <SID>VCalc_REPL(1)<CR>
 
     "don't allow inserting new lines
-    nnoremap <buffer> <silent> o :call <SID>GCalc_JumpToPrompt(1)<CR>
-    nnoremap <buffer> <silent> O :call <SID>GCalc_JumpToPrompt(1)<CR>
+    nnoremap <buffer> <silent> o :call <SID>VCalc_JumpToPrompt(1)<CR>
+    nnoremap <buffer> <silent> O :call <SID>VCalc_JumpToPrompt(1)<CR>
 
     "TODO: don't allow deleting lines
 
-    call setline(1, g:GCalc_Prompt)
+    call setline(1, g:VCalc_Prompt)
     startinsert!
 endfunction
 
-function! s:GCalc_ValidateVim()
+function! s:VCalc_ValidateVim()
     if has('python') != 1
-        echohl WarningMsg | echomsg "GCalc requires the Python interface to be installed." | echohl None
+        echohl WarningMsg | echomsg "VCalc requires the Python interface to be installed." | echohl None
         return -1
     endif
 
     return 0
 endfunction
 
-function! s:GCalc_REPL(continueInsert)
+function! s:VCalc_REPL(continueInsert)
 
     let expr = getline(".")
-    if match(expr, g:GCalc_Prompt) != 0
+    if match(expr, g:VCalc_Prompt) != 0
         return
     else
-        let expr = strpart(expr, matchend(expr, g:GCalc_Prompt))
+        let expr = strpart(expr, matchend(expr, g:VCalc_Prompt))
     endif
 
     exe "python repl(\"" . expr . "\")"
 
     "TODO: possibly test these returns?
     "let failed = append(line('$'), expr)
-    let failed = append(line('$'), g:GCalc_Prompt)
+    let failed = append(line('$'), g:VCalc_Prompt)
 
-    call <SID>GCalc_JumpToPrompt(a:continueInsert)
+    call <SID>VCalc_JumpToPrompt(a:continueInsert)
 endfunction
 
-function! s:GCalc_JumpToPrompt(withInsert)
+function! s:VCalc_JumpToPrompt(withInsert)
     call setpos(".", [0, line('$'), col('$'), 0])
     if a:withInsert == 1
         startinsert!
@@ -262,7 +263,7 @@ def getID(token):
 # instead of a list and not having shared state. Could be made a
 # lot simpler by using shared state...
 
-#gcalc context-free grammar
+#vcalc context-free grammar
 #line    -> expr | assign
 #assign  -> let ident = expr | let ident += expr | let ident -= expr 
 #           | let ident *= expr | let ident /= expr | let ident %= expr | let ident **= expr
@@ -275,7 +276,7 @@ def getID(token):
 #expt    -> number | func | ident | ( expr )
 #number  -> decnumber | hexnumber | octalnumber
 
-#gcalc context-free grammar LL(1) -- to be used with a recursive descent parser
+#vcalc context-free grammar LL(1) -- to be used with a recursive descent parser
 #line    -> expr | assign
 #assign  -> let ident (=|+=|-=|*=|/=|%=|**=) expr
 #expr    -> term {(+|-) term}
@@ -547,19 +548,19 @@ def snoc(seq, x):  #TODO: find more pythonic way of doing this
 #### symbol table manipulation functions ###########################################
 
 #global symbol table  #TODO: include phi?
-GCALC_SYMBOL_TABLE = {'ans':0,
+VCALC_SYMBOL_TABLE = {'ans':0,
                       'e':math.e,
                       'pi':math.pi} #NOTE: these can be rebound
 
 def lookupSymbol(symbol):
-    if GCALC_SYMBOL_TABLE.has_key(symbol):
-        return GCALC_SYMBOL_TABLE[symbol]
+    if VCALC_SYMBOL_TABLE.has_key(symbol):
+        return VCALC_SYMBOL_TABLE[symbol]
     else:
         error = "symbol '" + symbol + "' is not defined."
         raise ParseException, (error, 0)
 
 def storeSymbol(symbol, value):
-    GCALC_SYMBOL_TABLE[symbol] = value
+    VCALC_SYMBOL_TABLE[symbol] = value
 
 
 #### mathematical functions (built-ins) ############################################
@@ -574,9 +575,9 @@ def log2(n):
     return math.log(n, 2)
 
 def nrt(x,y):
-    return sqrt(x) #TODO:
+    return x**(1/y)
 
-GCALC_FUNCTION_TABLE = {
+VCALC_FUNCTION_TABLE = {
         'abs'   : math.fabs,
         'acos'  : math.acos,
         'asin'  : math.asin,
@@ -610,8 +611,8 @@ GCALC_FUNCTION_TABLE = {
         }
 
 def lookupFunc(symbol):
-    if GCALC_FUNCTION_TABLE.has_key(symbol):
-        return GCALC_FUNCTION_TABLE[symbol]
+    if VCALC_FUNCTION_TABLE.has_key(symbol):
+        return VCALC_FUNCTION_TABLE[symbol]
     else:
         error = "built-in function '" + symbol + "' does not exist."
         raise ParseException, (error, 0)
