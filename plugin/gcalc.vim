@@ -1,4 +1,3 @@
-"TODO: implement octal numbers
 "TODO: write all of the math functions including hex/dec/oct conversion
 "TODO: Arbitrary precision numbers!!!
 "TODO: negative numbers!!!!!!!
@@ -8,6 +7,7 @@
 "TODO: move most of the functionality to autoload script?
 "TODO: catch all exceptions?
 "TODO: up and down arrows to repeat expressions?
+"TODO: testing for a 1.0 release!!
 
 "configurable options
 let g:GCalc_Title = "__GCALC__"
@@ -134,7 +134,7 @@ def repl(expr):
 
 #decnumber   = digits(. digits)?(e[+-]? digits)? TODO: negative numbers?
 #hexnumber   = 0xhexdigits  NOTE: hex can only represent unsigned integers
-#octalnumber = ?? TODO:
+#octalnumber = 0 octdigits
 
 #whitespace = [\t ]+
 
@@ -199,6 +199,7 @@ class Lexeme(object):
 #language lexemes
 lexemes = [Lexeme('whitespace', r'\s+'),
            Lexeme('hexnumber',  r'0x[0-9a-fA-F]+'),
+           Lexeme('octnumber',  r'0[0-7]+'),
            Lexeme('decnumber',  r'[0-9]+(\.[0-9]+)?(e[+-]?[0-9]+)?'),
            Lexeme('let',        r'let'),
            Lexeme('ident',      r"[A-Za-z_][A-Za-z0-9_]*'?"),
