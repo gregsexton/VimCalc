@@ -19,6 +19,8 @@ syntax keyword vcalcLet let
 
 syntax keyword vcalcFuncs abs acos asin atan atan2 ceil cos cosh deg exp floor hypot inv ldexp lg ln log log10 max min nrt pow rad rand round sin sinh sqrt tan tanh
 
+syntax match vcalcDirectives ":hex\|:oct\|:dec"
+
 syntax match vcalcOps "\*\*=\|%=\|/=\|\*=\|-=\|+=\|<<\|>>\|\*\*\|=\|!\|%\|/\|\*\|-\|+"
 syntax match vcalcDelim "(\|)"
 
@@ -49,9 +51,17 @@ HiLink vcalcSymbol      Constant
 HiLink vcalcLet         vcalcKeyword
 HiLink vcalcKeyword     Keyword
 
+"Functions
 HiLink vcalcFuncs       Function
+
+"Operators
 HiLink vcalcOps         Operator
+
+"Delimiters
 HiLink vcalcDelim       Delimiter
+
+"Directives
+HiLink vcalcDirectives  Special
 
 "Numbers
 HiLink vcalcDecNum      vcalcNumber
