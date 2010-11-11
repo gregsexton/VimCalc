@@ -30,6 +30,7 @@ syntax match vcalcSynErr "^Syntax error: .*"
 syntax match vcalcParErr "^Parse error: .*"
 
 "TODO: syntax match vcalcPrompt
+"TODO: directives
 
 if version >= 600
 	command -nargs=+ HiLink highlight default link <args>
@@ -50,7 +51,7 @@ HiLink vcalcKeyword     Keyword
 
 HiLink vcalcFuncs       Function
 HiLink vcalcOps         Operator
-"HiLink vcalcDelim       Delimiter
+HiLink vcalcDelim       Delimiter
 
 "Numbers
 HiLink vcalcDecNum      vcalcNumber
@@ -61,7 +62,7 @@ HiLink vcalcNumber      Number
 "Errors
 HiLink vcalcSynErr      vcalcError
 HiLink vcalcParErr      vcalcError
-"HiLink vcalcError       Error
+HiLink vcalcError       Error
 
 delcommand HiLink
 

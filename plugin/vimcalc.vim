@@ -1,12 +1,10 @@
-"TODO: write all of the math functions including hex/dec/oct conversion
 "TODO: Arbitrary precision numbers!!!
 "TODO: negative numbers!!!!!!!
+"TODO: up and down arrows to repeat expressions?
 "TODO: write documentation (include notes)
 "TODO: built-in function reference
 "TODO: move most of the functionality to autoload script?
 "TODO: catch all exceptions?
-"TODO: up and down arrows to repeat expressions?
-"TODO: interpreter directives (e.g :dec or :hex)
 "TODO: testing for a 1.0 release!!
 "TODO: licensing headers
 
@@ -173,6 +171,11 @@ def repl(expr):
 #let = 'let'
 #keywords = let
 
+#decDir = ':dec'
+#hexDir = ':hex'
+#octDir = ':oct'
+#directives = decDir | hexDir | octDir
+
 class Token(object):
     def __init__(self, tokenID, attrib):
         self._tokenID = tokenID
@@ -224,7 +227,10 @@ lexemes = [Lexeme('whitespace', r'\s+'),
            Lexeme('divide',     r'/'),
            Lexeme('multiply',   r'\*'),
            Lexeme('subtract',   r'-'),
-           Lexeme('plus',       r'\+')]
+           Lexeme('plus',       r'\+'),
+           Lexeme('decDir',     r':dec'),
+           Lexeme('hexDir',     r':hex'),
+           Lexeme('octDir',     r':oct') ]
 
 #takes an expression and uses the language lexemes
 #to produce a sequence of tokens
@@ -279,15 +285,16 @@ def getID(token):
 #number  -> decnumber | hexnumber | octalnumber
 
 #vcalc context-free grammar LL(1) -- to be used with a recursive descent parser
-#line    -> expr | assign
-#assign  -> let ident (=|+=|-=|*=|/=|%=|**=) expr
-#expr    -> term {(+|-) term}
-#func    -> ident ( args )
-#args    -> expr {, expr}
-#term    -> factor {(*|/|%|<<|>>) factor} [!]
-#factor  -> expt {** expt}
-#expt    -> number | func | ident | ( expr )
-#number  -> decnumber | hexnumber | octalnumber
+#line       -> directive | expr | assign
+#directive  -> decDir | octDir | hexDir
+#assign     -> let ident (=|+=|-=|*=|/=|%=|**=) expr
+#expr       -> term {(+|-) term}
+#func       -> ident ( args )
+#args       -> expr {, expr}
+#term       -> factor {(*|/|%|<<|>>) factor} [!]
+#factor     -> expt {** expt}
+#expt       -> number | func | ident | ( expr )
+#number     -> decnumber | hexnumber | octalnumber
 
 class ParseNode(object):
     def __init__(self, success, result, consumedTokens):
@@ -343,15 +350,35 @@ def parse(expr):
         if lineNode.success:
             if lineNode.storeInAns:
                 storeSymbol('ans', lineNode.result)
-                return 'ans = ' + str(lineNode.result)
+                return 'ans = ' + process(lineNode.result)
             else:
-                return lineNode.assignedSymbol + ' = ' + str(lineNode.result)
+                if lineNode.assignedSymbol == None:
+                    return str(lineNode.result)
+                else:
+                    return lineNode.assignedSymbol + ' = ' + process(lineNode.result)
         else:
             return 'Parse error: the expression is invalid.'
     except ParseException, pe:
         return 'Parse error: ' + pe.message
 
+#this function returns an output string based on the global repl directives
+def process(result):
+    if VCALC_OUTPUT_BASE == 'decimal':
+        return str(result)
+    elif VCALC_OUTPUT_BASE == 'hexadecimal':
+        return str(hex(int(result))) #TODO: ints again
+    elif VCALC_OUTPUT_BASE == 'octal':
+        return str(oct(int(result))) #TODO: ints again
+    else:
+        return str('ERROR')
+
 def line(tokens):
+    directiveNode = directive(tokens)
+    if directiveNode.success:
+        if directiveNode.consumeCount == len(tokens):
+            return directiveNode
+        else:
+            return ParseNode(False, 0, directiveNode.consumeCount)
     assignNode = assign(tokens)
     if assignNode.success:
         if assignNode.consumeCount == len(tokens):
@@ -366,6 +393,29 @@ def line(tokens):
             return ParseNode(False, 0, exprNode.consumeCount)
     return ParseNode(False, 0, 0)
 
+VCALC_OUTPUT_BASE = 'decimal'
+def directive(tokens):
+    global VCALC_OUTPUT_BASE
+    if symbolCheck('decDir', 0, tokens):
+        VCALC_OUTPUT_BASE = 'decimal'
+        node = ParseNode(True, 'CHANGED BASE TO DECIMAL.', 1)
+        node.storeInAns = False
+        node.assignedSymbol = None
+        return node
+    if symbolCheck('hexDir', 0, tokens):
+        VCALC_OUTPUT_BASE = 'hexadecimal'
+        node = ParseNode(True, 'CHANGED BASE TO HEXADECIMAL.', 1)
+        node.storeInAns = False
+        node.assignedSymbol = None
+        return node
+    if symbolCheck('octDir', 0, tokens):
+        VCALC_OUTPUT_BASE = 'octal'
+        node = ParseNode(True, 'CHANGED BASE TO OCTAL.', 1)
+        node.storeInAns = False
+        node.assignedSymbol = None
+        return node
+    return ParseNode(False, 0, 0)
+        
 def assign(tokens):
     if map(getID, tokens[0:2]) == ['let', 'ident']:
         exprNode = expr(tokens[3:])
@@ -611,6 +661,7 @@ VCALC_FUNCTION_TABLE = {
         'sqrt'  : math.sqrt,
         'tan'   : math.tan,
         'tanh'  : math.tanh
+        #TODO: look at my graphics calculator; combinatorics functions
         }
 
 def lookupFunc(symbol):
