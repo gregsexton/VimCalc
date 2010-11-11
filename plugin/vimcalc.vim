@@ -1,14 +1,13 @@
 "TODO: write all of the math functions including hex/dec/oct conversion
 "TODO: Arbitrary precision numbers!!!
 "TODO: negative numbers!!!!!!!
-"TODO: syntax highlighting
 "TODO: write documentation (include notes)
 "TODO: built-in function reference
 "TODO: move most of the functionality to autoload script?
 "TODO: catch all exceptions?
 "TODO: up and down arrows to repeat expressions?
-"TODO: testing for a 1.0 release!!
 "TODO: interpreter directives (e.g :dec or :hex)
+"TODO: testing for a 1.0 release!!
 "TODO: licensing headers
 
 "configurable options
@@ -35,14 +34,17 @@ function! s:VCalc_Open()
         return
     endif
 
-    "if the buffer already exists edit otherwise create.
+    "if the buffer does not already exist create otherwise edit.
     let bufnum = bufnr(g:VCalc_Title)
     if bufnum == -1
-        let wcmd = g:VCalc_Title
+        let wcmd = 'new ' . g:VCalc_Title
+        exe 'silent! ' . g:VCalc_Win_Size . wcmd
+        call setline(1, g:VCalc_Prompt)
     else
-        let wcmd = '+buffer' . bufnum
+        let wcmd = 'split +buffer' . bufnum
+        exe 'silent! ' . g:VCalc_Win_Size . wcmd
+        call setline(line('$'), g:VCalc_Prompt)
     endif
-    exe 'silent! ' . g:VCalc_Win_Size . 'new ' . wcmd
 
     "set options
     silent! setlocal buftype=nofile
@@ -63,8 +65,7 @@ function! s:VCalc_Open()
 
     "TODO: don't allow deleting lines
 
-    call setline(1, g:VCalc_Prompt)
-    startinsert!
+    call <SID>VCalc_JumpToPrompt(1)
 endfunction
 
 function! s:VCalc_ValidateVim()
@@ -266,7 +267,7 @@ def getID(token):
 
 #vcalc context-free grammar
 #line    -> expr | assign
-#assign  -> let ident = expr | let ident += expr | let ident -= expr 
+#assign  -> let ident = expr | let ident += expr | let ident -= expr
 #           | let ident *= expr | let ident /= expr | let ident %= expr | let ident **= expr
 #expr    -> expr + term | expr - term | term
 #func    -> ident ( args )
@@ -566,9 +567,6 @@ def storeSymbol(symbol, value):
 
 #### mathematical functions (built-ins) ############################################
 
-#global built-in function table 
-#NOTE: variables do not share the same namespace as functions
-
 def loge(n):
     return math.log(n)
 
@@ -578,7 +576,10 @@ def log2(n):
 def nrt(x,y):
     return x**(1/y)
 
+#global built-in function table
+#NOTE: variables do not share the same namespace as functions
 #NOTE: if you change the name or add a function remember to update the syntax file
+
 VCALC_FUNCTION_TABLE = {
         'abs'   : math.fabs,
         'acos'  : math.acos,
