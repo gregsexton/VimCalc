@@ -398,19 +398,19 @@ def directive(tokens):
     global VCALC_OUTPUT_BASE
     if symbolCheck('decDir', 0, tokens):
         VCALC_OUTPUT_BASE = 'decimal'
-        node = ParseNode(True, 'CHANGED BASE TO DECIMAL.', 1)
+        node = ParseNode(True, 'CHANGED OUTPUT BASE TO DECIMAL.', 1)
         node.storeInAns = False
         node.assignedSymbol = None
         return node
     if symbolCheck('hexDir', 0, tokens):
         VCALC_OUTPUT_BASE = 'hexadecimal'
-        node = ParseNode(True, 'CHANGED BASE TO HEXADECIMAL.', 1)
+        node = ParseNode(True, 'CHANGED OUTPUT BASE TO HEXADECIMAL.', 1)
         node.storeInAns = False
         node.assignedSymbol = None
         return node
     if symbolCheck('octDir', 0, tokens):
         VCALC_OUTPUT_BASE = 'octal'
-        node = ParseNode(True, 'CHANGED BASE TO OCTAL.', 1)
+        node = ParseNode(True, 'CHANGED OUTPUT BASE TO OCTAL.', 1)
         node.storeInAns = False
         node.assignedSymbol = None
         return node
