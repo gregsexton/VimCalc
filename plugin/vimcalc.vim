@@ -1,5 +1,4 @@
 "TODO: Arbitrary precision numbers!!!
-"TODO: up and down arrows to repeat expressions?
 "TODO: write documentation (include notes)
 "TODO: built-in function reference
 "TODO: move most of the functionality to autoload script?
@@ -11,6 +10,7 @@
 let g:VCalc_Title = "__VCALC__"
 let g:VCalc_Prompt = "> "
 let g:VCalc_Win_Size = 10
+let g:VCalc_Max_History = 100
 
 command! -nargs=0 -bar Calc call s:VCalc_Open()
 
@@ -43,6 +43,9 @@ function! s:VCalc_Open()
         call setline(line('$'), g:VCalc_Prompt)
     endif
 
+    let b:VCalc_History = []
+    let b:VCalc_History_Index = -1
+
     "set options
     silent! setlocal buftype=nofile
     silent! setlocal nobuflisted
@@ -56,11 +59,12 @@ function! s:VCalc_Open()
     nnoremap <buffer> <silent> <CR> :call <SID>VCalc_REPL(0)<CR>
     inoremap <buffer> <silent> <CR> <C-o>:call <SID>VCalc_REPL(1)<CR>
 
-    "don't allow inserting new lines
-    nnoremap <buffer> <silent> o :call <SID>VCalc_JumpToPrompt(1)<CR>
-    nnoremap <buffer> <silent> O :call <SID>VCalc_JumpToPrompt(1)<CR>
+    "inserting a new line jumps to the prompt
+    nmap <buffer> <silent> o :call <SID>VCalc_JumpToPrompt(1)<CR>
+    nmap <buffer> <silent> O :call <SID>VCalc_JumpToPrompt(1)<CR>
 
-    "TODO: don't allow deleting lines
+    imap <buffer> <silent> <up> <C-o>:call <SID>VCalc_PreviousHistory()<CR>
+    imap <buffer> <silent> <down> <C-o>:call <SID>VCalc_NextHistory()<CR>
 
     call <SID>VCalc_JumpToPrompt(1)
 endfunction
@@ -83,11 +87,13 @@ function! s:VCalc_REPL(continueInsert)
         let expr = strpart(expr, matchend(expr, g:VCalc_Prompt))
     endif
 
+    call <SID>VCalc_RecordHistory(expr)
     exe "python repl(\"" . expr . "\")"
 
-    "TODO: possibly test these returns?
-    "let failed = append(line('$'), expr)
+    "TODO: possibly test this returns?
     let failed = append(line('$'), g:VCalc_Prompt)
+
+    let b:VCalc_History_Index = -1
 
     call <SID>VCalc_JumpToPrompt(a:continueInsert)
 endfunction
@@ -96,6 +102,31 @@ function! s:VCalc_JumpToPrompt(withInsert)
     call setpos(".", [0, line('$'), col('$'), 0])
     if a:withInsert == 1
         startinsert!
+    endif
+endfunction
+
+function! s:VCalc_RecordHistory(expr)
+    call insert(b:VCalc_History, a:expr)
+    if len(b:VCalc_History) > g:VCalc_Max_History
+        call remove(b:VCalc_History, -1)
+    endif
+endfunction
+
+function! s:VCalc_PreviousHistory()
+    "TODO: possibly test this returns?
+    if b:VCalc_History_Index < len(b:VCalc_History)-1
+        let b:VCalc_History_Index += 1
+        let failed = setline(line('$'), g:VCalc_Prompt . b:VCalc_History[b:VCalc_History_Index])
+        call <SID>VCalc_JumpToPrompt(1)
+    endif
+endfunction
+
+function! s:VCalc_NextHistory()
+    "TODO: possibly test this returns?
+    if b:VCalc_History_Index > 0
+        let b:VCalc_History_Index -= 1
+        let failed = setline(line('$'), g:VCalc_Prompt . b:VCalc_History[b:VCalc_History_Index])
+        call <SID>VCalc_JumpToPrompt(1)
     endif
 endfunction
 
@@ -132,8 +163,8 @@ def repl(expr):
 #octdigit  = [0-7]
 #octdigits = octdigit+
 
-#decnumber   = digits(. digits)?(e[+-]? digits)? TODO: negative numbers?
-#hexnumber   = 0xhexdigits  NOTE: hex can only represent unsigned integers
+#decnumber   = digits(. digits)?(e[+-]? digits)?
+#hexnumber   = 0xhexdigits
 #octalnumber = 0 octdigits
 
 #whitespace = [\t ]+
