@@ -1,12 +1,11 @@
 "TODO: Arbitrary precision numbers!!!
-"TODO: negative numbers!!!!!!!
 "TODO: up and down arrows to repeat expressions?
 "TODO: write documentation (include notes)
 "TODO: built-in function reference
 "TODO: move most of the functionality to autoload script?
 "TODO: catch all exceptions?
 "TODO: testing for a 1.0 release!!
-"TODO: licensing headers
+"TODO: (licensing) headers
 
 "configurable options
 let g:VCalc_Title = "__VCALC__"
@@ -281,7 +280,7 @@ def getID(token):
 #term    -> term * factor | term / factor | term % factor
 #           | term << factor | term >> factor | term ! | factor
 #factor  -> expt ** factor | expt
-#expt    -> number | func | ident | ( expr )
+#expt    -> - number | number | func | ident | ( expr )
 #number  -> decnumber | hexnumber | octalnumber
 
 #vcalc context-free grammar LL(1) -- to be used with a recursive descent parser
@@ -293,7 +292,7 @@ def getID(token):
 #args       -> expr {, expr}
 #term       -> factor {(*|/|%|<<|>>) factor} [!]
 #factor     -> expt {** expt}
-#expt       -> number | func | ident | ( expr )
+#expt       -> - number | number | func | ident | ( expr )
 #number     -> decnumber | hexnumber | octalnumber
 
 class ParseNode(object):
@@ -415,7 +414,7 @@ def directive(tokens):
         node.assignedSymbol = None
         return node
     return ParseNode(False, 0, 0)
-        
+
 def assign(tokens):
     if map(getID, tokens[0:2]) == ['let', 'ident']:
         exprNode = expr(tokens[3:])
@@ -523,14 +522,23 @@ def factor(tokens):
         return ParseNode(False, 0, consumed)
 
 def expt(tokens):
+    #function
     funcNode = func(tokens)
     if funcNode.success:
         return funcNode
+    #identifier
     if symbolCheck('ident', 0, tokens):
         return ParseNode(True, lookupSymbol(tokens[0].attrib), 1)
+    #unary -
+    if symbolCheck('subtract', 0, tokens):
+        numberNode = number(tokens[1:])
+        if numberNode.success:
+            return ParseNode(True, numberNode.result*-1, numberNode.consumeCount+1)
+    #plain number
     numberNode = number(tokens)
     if numberNode.success:
         return numberNode
+    #(expr)
     if symbolCheck('lParen', 0, tokens):
         exprNode = expr(tokens[1:])
         if exprNode.success:
