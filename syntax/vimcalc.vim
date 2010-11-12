@@ -31,8 +31,10 @@ syntax match vcalcOctNum "0[0-7]\+"
 syntax match vcalcSynErr "^Syntax error: .*"
 syntax match vcalcParErr "^Parse error: .*"
 
-"TODO: syntax match vcalcPrompt
-"TODO: directives
+if g:VCalc_Prompt != ''
+    silent execute "syn match vcalcPrompt '" . g:VCalc_Prompt . "'"
+    hi def link vcalcPrompt Type
+endif
 
 if version >= 600
 	command -nargs=+ HiLink highlight default link <args>
