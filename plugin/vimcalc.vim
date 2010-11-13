@@ -1,10 +1,13 @@
-"TODO: Arbitrary precision numbers!!!
 "TODO: write documentation (include notes)
 "TODO: built-in function reference
 "TODO: move most of the functionality to autoload script?
-"TODO: catch all exceptions?
 "TODO: testing for a 1.0 release!!
 "TODO: (licensing) headers
+
+if exists('g:loaded_vimcalc') || v:version < 700
+  finish
+endif
+let g:loaded_autoload_fuf = 1
 
 "configurable options
 let g:VCalc_Title = "__VCALC__"
@@ -396,9 +399,9 @@ def process(result):
     if VCALC_OUTPUT_BASE == 'decimal':
         return str(result)
     elif VCALC_OUTPUT_BASE == 'hexadecimal':
-        return str(hex(int(result))) #TODO: ints again
+        return str(hex(int(result)))
     elif VCALC_OUTPUT_BASE == 'octal':
-        return str(oct(int(result))) #TODO: ints again
+        return str(oct(int(result)))
     else:
         return str('ERROR')
 
@@ -528,7 +531,7 @@ def term(tokens):
     factNode = factor(tokens)
     consumed = factNode.consumeCount
     if factNode.success:
-        foldNode = foldlParseMult(factor, #TODO: change from int in lambdas
+        foldNode = foldlParseMult(factor,
                                   [lambda x,y:x*y, lambda x,y:x/y, lambda x,y:x%y,
                                       lambda x,y:int(x)<<int(y), lambda x,y:int(x)>>int(y)],
                                   ['multiply', 'divide', 'modulo', 'lShift', 'rShift'],
@@ -665,6 +668,12 @@ def log2(n):
 def nrt(x,y):
     return x**(1/y)
 
+def factorial(n):
+    acc = 1
+    for i in xrange(int(n)): #TODO: change from int
+        acc *= i+1
+    return acc
+
 #global built-in function table
 #NOTE: variables do not share the same namespace as functions
 #NOTE: if you change the name or add a function remember to update the syntax file
@@ -709,12 +718,6 @@ def lookupFunc(symbol):
     else:
         error = "built-in function '" + symbol + "' does not exist."
         raise ParseException, (error, 0)
-
-def factorial(n):
-    acc = 1
-    for i in xrange(int(n)): #TODO: change from int
-        acc *= i+1
-    return acc
 
 EOF
 
