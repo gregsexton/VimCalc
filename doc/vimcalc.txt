@@ -14,8 +14,8 @@ VimCalc                                                         *vimcalc* *:Calc
 5. Functions                 |vimcalc-functions|
 6. Variables and Literals    |vimcalc-vars-literals|
 7. Configuration Options     |vimcalc-config-options|
-8. Changelog
-9. Misc
+8. Changelog                 |vimcalc-changelog|
+9. Misc                      |vimcalc-misc|
 
 ==============================================================================
 1. Introduction                                          *vimcalc-introduction*
@@ -457,7 +457,7 @@ using the up and down arrow keys. Reduce this value to reduce memory usage.
 <
 
 ==============================================================================
-8. Changelog
+8. Changelog                                                *vimcalc-changelog*
 
 1.0         First release. I hope you enjoy VimCalc!
 
