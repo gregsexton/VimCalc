@@ -7,7 +7,7 @@
 if exists('g:loaded_vimcalc') || v:version < 700
   finish
 endif
-let g:loaded_autoload_fuf = 1
+"let g:loaded_vimcalc = 1  TODO:
 
 "configurable options
 let g:VCalc_Title = "__VCALC__"
@@ -325,7 +325,7 @@ def getID(token):
 #func       -> ident ( args )
 #args       -> expr {, expr}
 #term       -> factor {(*|/|%|<<|>>) factor} [!]
-#factor     -> expt {** expt}
+#factor     -> {expt **} expt
 #expt       -> - number | number | func | ident | ( expr )
 #number     -> decnumber | hexnumber | octalnumber
 
@@ -550,7 +550,7 @@ def factor(tokens):
     consumed = exptNode.consumeCount
     result = exptNode.result
     if exptNode.success:
-        foldNode = foldlParse(expt, lambda x,y:x**y, 'exponent', result, tokens[consumed:])
+        foldNode = foldrParse(expt, lambda x,y:x**y, 'exponent', result, tokens[consumed:])
         return ParseNode(foldNode.success, foldNode.result, consumed+foldNode.consumeCount)
     else:
         return ParseNode(False, 0, consumed)
@@ -627,6 +627,24 @@ def foldlParseMult(parsefn, resfns, syms, initial, tokens):
             else:
                 return ParseNode(False, 0, consumed)
         return ParseNode(True, result, consumed)
+
+def foldrParse(parsefn, resfn, symbol, initial, tokens):
+    #foldlParse into a sequence and then do a foldr to evaluate
+    parseNode = foldlParse(parsefn, snoc, symbol, [], tokens)
+    if parseNode.success:
+        result = foldr(resfn, initial, parseNode.result)
+        return ParseNode(parseNode.success, result, parseNode.consumeCount)
+    else:
+        return parseNode
+
+#rather literal haskell implementation of this, proably very
+#unpythonic and inefficient. Should do for the needs of vimcalc
+#however. TODO: in the future improve this!
+def foldr(fn, init, lst):
+    if lst == []:
+        return init
+    else:
+        return fn(init, foldr(fn, lst[0], lst[1:]))
 
 def symbolCheck(symbol, index, tokens):
     if index < len(tokens):
