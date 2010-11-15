@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:    VimCalc vim plugin
 " Maintainer:  Greg Sexton <gregsexton@gmail.com>
-" URL:         TODO:
-"
+" URL:         https://github.com/gregsexton/VimCalc
+
 
 if version < 600
     syntax clear
@@ -78,4 +78,4 @@ HiLink vcalcError       Error
 
 delcommand HiLink
 
-let b:current_syntax = "clojure"
+let b:current_syntax = "vimcalc"

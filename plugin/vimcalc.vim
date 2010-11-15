@@ -314,7 +314,7 @@ def getID(token):
 #term    -> term * factor | term / factor | term % factor
 #           | term << factor | term >> factor | term ! | factor
 #factor  -> expt ** factor | expt
-#expt    -> - number | number | func | ident | ( expr )
+#expt    -> func | ident | - number | number | ( expr )
 #number  -> decnumber | hexnumber | octalnumber
 
 #vcalc context-free grammar LL(1) -- to be used with a recursive descent parser
@@ -326,7 +326,7 @@ def getID(token):
 #args       -> expr {, expr}
 #term       -> factor {(*|/|%|<<|>>) factor} [!]
 #factor     -> {expt **} expt
-#expt       -> - number | number | func | ident | ( expr )
+#expt       -> func | ident | - number | number | ( expr )
 #number     -> decnumber | hexnumber | octalnumber
 
 class ParseNode(object):
@@ -659,10 +659,11 @@ def snoc(seq, x):  #TODO: find more pythonic way of doing this
 
 #### symbol table manipulation functions ###########################################
 
-#global symbol table  #TODO: include phi?
+#global symbol table NOTE: these can be rebound
 VCALC_SYMBOL_TABLE = {'ans':0,
                       'e':math.e,
-                      'pi':math.pi} #NOTE: these can be rebound
+                      'pi':math.pi,
+                      'phi':1.6180339887498948482}
 
 def lookupSymbol(symbol):
     if VCALC_SYMBOL_TABLE.has_key(symbol):
