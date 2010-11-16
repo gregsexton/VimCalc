@@ -137,6 +137,10 @@ it. It is probably safer to use the history navigation.
     |<down>|      Insert          This recalls the next expression that was
                                 evaluated. Opposite in effect to <up>.
 
+    |<F1>|        Normal          This opens this help page at the
+                                function-list. Useful for quickly looking up a
+                                forgotten function.
+
 
 3.2 Directives                                             *vimcalc-directives*
 

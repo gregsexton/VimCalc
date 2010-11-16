@@ -3,7 +3,6 @@
 "VERSION:  1.0, for Vim 7.0+
 "LICENSE:  Same terms as Vim itself (see :help license).
 
-"TODO: built-in function reference
 "TODO: write a readme for github, summary for vim.org
 
 "TODO: move most of the functionality to autoload script if gets more complicated
@@ -70,6 +69,8 @@ function! s:VCalc_Open()
     nmap <buffer> <silent> o :call <SID>VCalc_JumpToPrompt(1)<CR>
     nmap <buffer> <silent> O :call <SID>VCalc_JumpToPrompt(1)<CR>
 
+    nmap <buffer> <silent> <F1> :help vimcalc-function-list<CR>
+
     imap <buffer> <silent> <up> <C-o>:call <SID>VCalc_PreviousHistory()<CR>
     imap <buffer> <silent> <down> <C-o>:call <SID>VCalc_NextHistory()<CR>
 
@@ -97,7 +98,6 @@ function! s:VCalc_REPL(continueInsert)
     call <SID>VCalc_RecordHistory(expr)
     exe "python repl(\"" . expr . "\")"
 
-    "TODO: possibly test this returns?
     let failed = append(line('$'), g:VCalc_Prompt)
 
     let b:VCalc_History_Index = -1
@@ -120,7 +120,6 @@ function! s:VCalc_RecordHistory(expr)
 endfunction
 
 function! s:VCalc_PreviousHistory()
-    "TODO: possibly test this returns?
     if b:VCalc_History_Index < len(b:VCalc_History)-1
         let b:VCalc_History_Index += 1
         let failed = setline(line('$'), g:VCalc_Prompt . b:VCalc_History[b:VCalc_History_Index])
@@ -129,7 +128,6 @@ function! s:VCalc_PreviousHistory()
 endfunction
 
 function! s:VCalc_NextHistory()
-    "TODO: possibly test this returns?
     if b:VCalc_History_Index > 0
         let b:VCalc_History_Index -= 1
         let failed = setline(line('$'), g:VCalc_Prompt . b:VCalc_History[b:VCalc_History_Index])
