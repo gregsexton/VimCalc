@@ -16,7 +16,6 @@ then re-evaluate them by simply hitting <CR>. Once you've got the answers yank
 them into several registers and paste with ease into other buffers!
 
 Here are some example expressions run in a VimCalc session:
-
 <code>
     > 5+4
     ans = 9.0
@@ -32,7 +31,6 @@ Here are some example expressions run in a VimCalc session:
 
 Here is an example of calculating the roots of a quadratic
 equation:
-
 <code>
     > let a = 2
     a = 2.0
