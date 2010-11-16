@@ -134,7 +134,7 @@ it. It is probably safer to use the history navigation.
                                 the history of the REPL. See |vimcalc-history-size|
                                 to configure how many items of history are kept.
 
-    |<down>|      Insert          The recalls the next expression that was
+    |<down>|      Insert          This recalls the next expression that was
                                 evaluated. Opposite in effect to <up>.
 
 
@@ -465,7 +465,7 @@ using the up and down arrow keys. Reduce this value to reduce memory usage.
 9. Misc                                                          *vimcalc-misc*
 
 
-8.1 Known bugs                                                   *vimcalc-bugs*
+9.1 Known bugs                                                   *vimcalc-bugs*
 
 There are no known bugs. Hopefully there are not too many unknown. This is a
 version 1.0 release so I imagine it isn't perfect. Please see
@@ -484,7 +484,7 @@ Hopefully, all of these features will be addressed in future releases of
 VimCalc. If you wish to develop any of these or anything else for VimCalc
 please see the next section.
 
-8.2 Contribute                                             *vimcalc-contribute*
+9.2 Contribute                                             *vimcalc-contribute*
 
 Contributing to VimCalc couldn't be easier. If you wish to do development work
 on the code base or documentation simply fork the git repository and submit a
@@ -492,7 +492,7 @@ pull request to me. If you discover a bug or wish to submit a feature request
 add an issue to the github page. Anything else, feel free to email me:
 gregsexton@gmail.com.
 
-8.3 Feedback                                                 *vimcalc-feedback*
+9.3 Feedback                                                 *vimcalc-feedback*
 
 Bugs, suggestions and patches are all very welcome. If you find issues with
 VimCalc please add them to the issues page on the github project.

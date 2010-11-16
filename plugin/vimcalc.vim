@@ -1,4 +1,3 @@
-"TODO: write documentation (include notes)
 "TODO: built-in function reference
 "TODO: move most of the functionality to autoload script?
 "TODO: testing for a 1.0 release!!
