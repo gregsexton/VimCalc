@@ -12,7 +12,7 @@ calculator for, VimCalc is up to the task.
 
 Not only can VimCalc calculate but it uses Vim for input and editing. Quickly
 and easily perform edits on previous calculations using the power of Vim and
-then re-evaluate them by simply hitting <CR>. Once you've got the answers yank
+then re-evaluate them by simply hitting return. Once you've got the answers yank
 them into several registers and paste with ease into other buffers!
 
 Here are some example expressions run in a VimCalc session:
