@@ -262,6 +262,8 @@ patches.
 
     ceil(x)         Returns the smallest integral value >= x.
 
+    choose(n,k)     Returns the binomail coefficient n `choose` k.
+
     cos(x)          Returns the cosine of x (measured in radians).
 
     cosh(x)         Returns the hyperbolic cosine of x.
@@ -293,6 +295,8 @@ patches.
     min(x,y)        Returns the smaller value of x and y.
 
     nrt(x,n)        Returns the nth root of x.
+
+    perms(n,k)      Returns the number of k-permutations of an n-set.
 
     pow(x,y)        Returns x raised to the power of y (x**y).
 

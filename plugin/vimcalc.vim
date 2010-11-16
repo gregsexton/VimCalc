@@ -1,16 +1,17 @@
-"TODO: built-in function reference
-"TODO: move most of the functionality to autoload script?
-"TODO: testing for a 1.0 release!!
-
 "AUTHOR:   Greg Sexton <gregsexton@gmail.com>
 "WEBSITE:  https://github.com/gregsexton/VimCalc
 "VERSION:  1.0, for Vim 7.0+
 "LICENSE:  Same terms as Vim itself (see :help license).
 
+"TODO: built-in function reference
+"TODO: write a readme for github, summary for vim.org
+
+"TODO: move most of the functionality to autoload script if gets more complicated
+
 if exists('g:loaded_vimcalc') || v:version < 700
   finish
 endif
-"let g:loaded_vimcalc = 1  TODO:
+let g:loaded_vimcalc = 1
 
 "configurable options
 let g:VCalc_Title = "__VCALC__"
@@ -692,9 +693,16 @@ def nrt(x,y):
 
 def factorial(n):
     acc = 1
-    for i in xrange(int(n)): #TODO: change from int
+    for i in xrange(int(n)):
         acc *= i+1
     return acc
+
+def perms(n,k):
+    return factorial(n)/factorial(n-k)
+
+def choose(n,k):
+    denominator = factorial(k) * factorial(n-k)
+    return factorial(n)/denominator
 
 #global built-in function table
 #NOTE: variables do not share the same namespace as functions
@@ -707,6 +715,7 @@ VCALC_FUNCTION_TABLE = {
         'atan'  : math.atan,
         'atan2' : math.atan2,
         'ceil'  : math.ceil,
+        'choose': choose,
         'cos'   : math.cos,
         'cosh'  : math.cosh,
         'deg'   : math.degrees,
@@ -722,6 +731,7 @@ VCALC_FUNCTION_TABLE = {
         'max'   : max,
         'min'   : min,
         'nrt'   : nrt,
+        'perms' : perms,
         'pow'   : math.pow,
         'rad'   : math.radians,
         'rand'  : random.random, #random() -> x in the interval [0, 1).
@@ -731,7 +741,6 @@ VCALC_FUNCTION_TABLE = {
         'sqrt'  : math.sqrt,
         'tan'   : math.tan,
         'tanh'  : math.tanh
-        #TODO: look at my graphics calculator; combinatorics functions
         }
 
 def lookupFunc(symbol):

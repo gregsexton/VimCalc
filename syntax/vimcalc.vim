@@ -17,7 +17,7 @@ syntax keyword vcalcPhi phi
 
 syntax keyword vcalcLet let
 
-syntax keyword vcalcFuncs abs acos asin atan atan2 ceil cos cosh deg exp floor hypot inv ldexp lg ln log log10 max min nrt pow rad rand round sin sinh sqrt tan tanh
+syntax keyword vcalcFuncs abs acos asin atan atan2 ceil choose cos cosh deg exp floor hypot inv ldexp lg ln log log10 max min nrt perms pow rad rand round sin sinh sqrt tan tanh
 
 syntax match vcalcDirectives ":hex\|:oct\|:dec"
 
