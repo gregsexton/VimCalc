@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:    VimCalc vim plugin
-" Maintainer:  Greg Sexton <gregsexton@gmail.com>
-" URL:         https://github.com/gregsexton/VimCalc
-
+"AUTHOR:   Greg Sexton <gregsexton@gmail.com>
+"WEBSITE:  https://github.com/gregsexton/VimCalc
+"VERSION:  1.0, for Vim 7.0+
+"LICENSE:  Same terms as Vim itself (see :help license).
 
 if version < 600
     syntax clear

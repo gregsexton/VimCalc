@@ -1,7 +1,11 @@
 "TODO: built-in function reference
 "TODO: move most of the functionality to autoload script?
 "TODO: testing for a 1.0 release!!
-"TODO: (licensing) headers
+
+"AUTHOR:   Greg Sexton <gregsexton@gmail.com>
+"WEBSITE:  https://github.com/gregsexton/VimCalc
+"VERSION:  1.0, for Vim 7.0+
+"LICENSE:  Same terms as Vim itself (see :help license).
 
 if exists('g:loaded_vimcalc') || v:version < 700
   finish
