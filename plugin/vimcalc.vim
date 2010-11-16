@@ -3,8 +3,6 @@
 "VERSION:  1.0, for Vim 7.0+
 "LICENSE:  Same terms as Vim itself (see :help license).
 
-"TODO: write a readme for github, summary for vim.org
-
 "TODO: move most of the functionality to autoload script if gets more complicated
 
 if exists('g:loaded_vimcalc') || v:version < 700
