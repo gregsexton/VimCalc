@@ -463,6 +463,27 @@ using the up and down arrow keys. Reduce this value to reduce memory usage.
 >
     let g:VCalc_Max_History = 100
 <
+7.5 Insert Mode when Entering Buffer
+
+If set to 1, when entering the buffer, insert mode will automatically be
+activated and the cursor will jump to the prompt. If 0 Vim will behave as
+normally and will enter the buffer in normal mode. To evaluate expressions you
+must manually enter insert mode. This option is to facilitate performing quick
+calculations and then jumping back to the window you are working in.
+>
+    let g:VCalc_InsertOnEnter = 0
+<
+7.6 Enable <C-W> Commands in Insert Mode
+
+If set to 1 then you may issue select <C-W> based window commands whilst in
+insert mode in the VimCalc buffer. If set to 0 <C-W> works as normal in insert
+mode and deletes a word. This can irritatingly delete the prompt. The only
+<C-W> commands defined for insert mode are movement based, i.e. h,j,k,l,b,t,w
+and W. This option is to facilitate performing quick calculations and then
+jumping back to the window you are working in.
+>
+    let g:VCalc_CWInsert = 0
+<
 
 ==============================================================================
 8. Changelog                                                *vimcalc-changelog*

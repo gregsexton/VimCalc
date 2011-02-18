@@ -11,10 +11,12 @@ endif
 let g:loaded_vimcalc = 1
 
 "configurable options
-let g:VCalc_Title = "__VCALC__"
-let g:VCalc_Prompt = "> "
-let g:VCalc_Win_Size = 10
-let g:VCalc_Max_History = 100
+let g:VCalc_Title         = "__VCALC__"
+let g:VCalc_Prompt        = "> "
+let g:VCalc_Win_Size      = 10
+let g:VCalc_Max_History   = 100
+let g:VCalc_CWInsert      = 0
+let g:VCalc_InsertOnEnter = 0
 
 command! -nargs=0 -bar Calc call s:VCalc_Open()
 
@@ -71,6 +73,10 @@ function! s:VCalc_Open()
 
     imap <buffer> <silent> <up> <C-o>:call <SID>VCalc_PreviousHistory()<CR>
     imap <buffer> <silent> <down> <C-o>:call <SID>VCalc_NextHistory()<CR>
+
+    au BufEnter <buffer> :call <SID>VCalc_InsertOnEnter()
+
+    call <SId>VCalc_CreateCWInsertMappings()
 
     call <SID>VCalc_JumpToPrompt(1)
 endfunction
@@ -133,6 +139,24 @@ function! s:VCalc_NextHistory()
     endif
 endfunction
 
+function! s:VCalc_InsertOnEnter()
+    if g:VCalc_InsertOnEnter
+        call <SID>VCalc_JumpToPrompt(1)
+    endif
+endfunction
+
+function! s:VCalc_CreateCWInsertMappings()
+    if g:VCalc_CWInsert
+        imap <buffer> <silent> <C-W>l <ESC><C-W>l
+        imap <buffer> <silent> <C-W>k <ESC><C-W>k
+        imap <buffer> <silent> <C-W>j <ESC><C-W>j
+        imap <buffer> <silent> <C-W>h <ESC><C-W>h
+        imap <buffer> <silent> <C-W>b <ESC><C-W>b
+        imap <buffer> <silent> <C-W>t <ESC><C-W>t
+        imap <buffer> <silent> <C-W>w <ESC><C-W>w
+        imap <buffer> <silent> <C-W>W <ESC><C-W>W
+    endif
+endfunction
 " **********************************************************************************************************
 " **** PYTHON **********************************************************************************************
 " **********************************************************************************************************
