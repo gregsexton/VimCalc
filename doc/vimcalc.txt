@@ -152,13 +152,21 @@ are:
     Directive   Effect~
 
     |:dec|        Puts the REPL into decimal mode. All results are evaluated and
-                then converted into decimal before being displayed.
+                then converted into decimal before being displayed. This is
+                the default.
 
     |:hex|        Puts the REPL into hexadecimal mode. All results are evaluated
                 and then converted into hexadecimal before being displayed.
 
     |:oct|        Puts the REPL into octal mode. All results are evaluated and
                 then converted into octal before being displayed.
+
+    |:int|        Puts the environment into integer mode. All results are
+                evaluated using integer precision arithmetic.
+
+    |:float|      Puts the environment into floating point mode. All results
+                are evaluated using floating point precision arithmetic. This
+                is the default.
 
 The :dec, :hex and :oct directives are particularly useful for converting
 between the different number bases. Numbers are still evaluated by the REPL
@@ -178,6 +186,28 @@ different number literals. This allows for easy conversion:
     > 0x10
     ans = 16
 <
+The :int and :float directives only have an effect whilst the REPL is in
+decimal mode. When in octal or hexadecimal modes all number literals are
+calculated using integer precision regardless. It is not possible to enter
+fractional octal or hexadecimal literals. Decimal floating point precision is
+the default mode the REPL starts in.
+
+When in integer mode all expressions are evaluated using integers, this
+includes sub-expressions. Results are not evaluated and then lastly converted
+to an integer. For example:
+>
+    > :float
+    CHANGED OUTPUT PRECISION TO FLOATING POINT.
+    > (8/3) * (4/3)
+    ans = 3.55555555556
+    > :int
+    CHANGED OUTPUT PRECISION TO INTEGER.
+    > (8/3) * (4/3)
+    ans = 2
+<
+The integer mode answer to this expression was 2 rather than 3 as the
+sub-expressions (8/3) and (4/3) were calculated also in integer mode.
+
 ==============================================================================
 4. Operators                                                *vimcalc-operators*
 

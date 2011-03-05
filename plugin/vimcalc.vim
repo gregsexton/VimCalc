@@ -1,6 +1,6 @@
 "AUTHOR:   Greg Sexton <gregsexton@gmail.com>
 "WEBSITE:  https://github.com/gregsexton/VimCalc
-"VERSION:  1.2, for Vim 7.0+
+"VERSION:  1.3, for Vim 7.0+
 "LICENSE:  Same terms as Vim itself (see :help license).
 
 "TODO: move most of the functionality to autoload script if gets more complicated
@@ -265,10 +265,12 @@ def repl(expr):
 #let = 'let'
 #keywords = let
 
-#decDir = ':dec'
-#hexDir = ':hex'
-#octDir = ':oct'
-#directives = decDir | hexDir | octDir
+#decDir     = ':dec'
+#hexDir     = ':hex'
+#octDir     = ':oct'
+#intDir     = ':int'
+#floatDir   = ':float'
+#directives = decDir | hexDir | octDir | intDir | floatDir
 
 class Token(object):
     def __init__(self, tokenID, attrib):
@@ -324,7 +326,9 @@ lexemes = [Lexeme('whitespace', r'\s+'),
            Lexeme('plus',       r'\+'),
            Lexeme('decDir',     r':dec'),
            Lexeme('hexDir',     r':hex'),
-           Lexeme('octDir',     r':oct') ]
+           Lexeme('octDir',     r':oct'),
+           Lexeme('intDir',     r':int'),
+           Lexeme('floatDir',   r':float') ]
 
 #takes an expression and uses the language lexemes
 #to produce a sequence of tokens
@@ -366,21 +370,22 @@ def getID(token):
 # lot simpler by using shared state...
 
 #vcalc context-free grammar
-#line    -> expr | assign
-#assign  -> let ident = expr | let ident += expr | let ident -= expr
-#           | let ident *= expr | let ident /= expr | let ident %= expr | let ident **= expr
-#expr    -> expr + term | expr - term | term
-#func    -> ident ( args )
-#args    -> expr , args | expr
-#term    -> term * factor | term / factor | term % factor
-#           | term << factor | term >> factor | term ! | factor
-#factor  -> expt ** factor | expt
-#expt    -> func | ident | - number | number | ( expr )
-#number  -> decnumber | hexnumber | octalnumber
+#line      -> directive | expr | assign
+#directive -> decDir | octDir | hexDir | intDir | floatDir
+#assign    -> let ident = expr | let ident += expr | let ident -= expr
+#             | let ident *= expr | let ident /= expr | let ident %= expr | let ident **= expr
+#expr      -> expr + term | expr - term | term
+#func      -> ident ( args )
+#args      -> expr , args | expr
+#term      -> term * factor | term / factor | term % factor
+#             | term << factor | term >> factor | term ! | factor
+#factor    -> expt ** factor | expt
+#expt      -> func | ident | - number | number | ( expr )
+#number    -> decnumber | hexnumber | octalnumber
 
 #vcalc context-free grammar LL(1) -- to be used with a recursive descent parser
 #line       -> directive | expr | assign
-#directive  -> decDir | octDir | hexDir
+#directive  -> decDir | octDir | hexDir | intDir | floatDir
 #assign     -> let ident (=|+=|-=|*=|/=|%=|**=) expr
 #expr       -> term {(+|-) term}
 #func       -> ident ( args )
@@ -458,13 +463,21 @@ def parse(expr):
 #this function returns an output string based on the global repl directives
 def process(result):
     if VCALC_OUTPUT_BASE == 'decimal':
-        return str(result)
+        output = result
     elif VCALC_OUTPUT_BASE == 'hexadecimal':
         return str(hex(int(result)))
     elif VCALC_OUTPUT_BASE == 'octal':
         return str(oct(int(result)))
     else:
-        return str('ERROR')
+        return 'ERROR'
+
+    if VCALC_OUTPUT_PRECISION == 'int':
+        return str(int(output))
+    elif VCALC_OUTPUT_PRECISION == 'float':
+        return str(output)
+    else:
+        return 'ERROR'
+
 
 def line(tokens):
     directiveNode = directive(tokens)
@@ -487,27 +500,28 @@ def line(tokens):
             return ParseNode(False, 0, exprNode.consumeCount)
     return ParseNode(False, 0, 0)
 
-VCALC_OUTPUT_BASE = 'decimal'
+VCALC_OUTPUT_BASE      = 'decimal'
+VCALC_OUTPUT_PRECISION = 'float'
+
 def directive(tokens):
+    #TODO: refactor this -- extract method
     global VCALC_OUTPUT_BASE
+    global VCALC_OUTPUT_PRECISION
     if symbolCheck('decDir', 0, tokens):
         VCALC_OUTPUT_BASE = 'decimal'
-        node = ParseNode(True, 'CHANGED OUTPUT BASE TO DECIMAL.', 1)
-        node.storeInAns = False
-        node.assignedSymbol = None
-        return node
+        return createDirectiveParseNode('CHANGED OUTPUT BASE TO DECIMAL.')
     if symbolCheck('hexDir', 0, tokens):
         VCALC_OUTPUT_BASE = 'hexadecimal'
-        node = ParseNode(True, 'CHANGED OUTPUT BASE TO HEXADECIMAL.', 1)
-        node.storeInAns = False
-        node.assignedSymbol = None
-        return node
+        return createDirectiveParseNode('CHANGED OUTPUT BASE TO HEXADECIMAL.')
     if symbolCheck('octDir', 0, tokens):
         VCALC_OUTPUT_BASE = 'octal'
-        node = ParseNode(True, 'CHANGED OUTPUT BASE TO OCTAL.', 1)
-        node.storeInAns = False
-        node.assignedSymbol = None
-        return node
+        return createDirectiveParseNode('CHANGED OUTPUT BASE TO OCTAL.')
+    if symbolCheck('floatDir', 0, tokens):
+        VCALC_OUTPUT_PRECISION = 'float'
+        return createDirectiveParseNode('CHANGED OUTPUT PRECISION TO FLOATING POINT.')
+    if symbolCheck('intDir', 0, tokens):
+        VCALC_OUTPUT_PRECISION = 'int'
+        return createDirectiveParseNode('CHANGED OUTPUT PRECISION TO INTEGER.')
     return ParseNode(False, 0, 0)
 
 def assign(tokens):
@@ -646,7 +660,13 @@ def expt(tokens):
 
 def number(tokens):
     if symbolCheck('decnumber', 0, tokens):
-        return ParseNode(True, float(tokens[0].attrib), 1)
+        if VCALC_OUTPUT_PRECISION == 'float':
+            num = float(tokens[0].attrib)
+        elif VCALC_OUTPUT_PRECISION == 'int':
+            num = int(float(tokens[0].attrib)) #int from float as string input
+        else:
+            num = 0 #error
+        return ParseNode(True, num, 1)
     elif symbolCheck('hexnumber', 0, tokens):
         return ParseNode(True, long(tokens[0].attrib,16), 1)
     elif symbolCheck('octnumber', 0, tokens):
@@ -697,6 +717,12 @@ def foldrParse(parsefn, resfn, symbol, initial, tokens):
         return ParseNode(parseNode.success, result, parseNode.consumeCount)
     else:
         return parseNode
+
+def createDirectiveParseNode(outputMsg):
+    node = ParseNode(True, outputMsg, 1)
+    node.storeInAns = False
+    node.assignedSymbol = None
+    return node
 
 #rather literal haskell implementation of this, proably very
 #unpythonic and inefficient. Should do for the needs of vimcalc
