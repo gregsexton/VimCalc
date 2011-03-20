@@ -389,6 +389,8 @@ any 'A-Z', 'a-z', '0-9' or '_'. Finally it may end in a single "'". Any legal
 expression can be used and the result of which will be bound to the
 identifier.
 
+Note: The 'let' in all assignments is optional and can be omitted for brevity.
+
 It is not necessary to declare a variable before assigning it and the type is
 always internally defined as a float. Arbitrary precision evaluation is a high
 priority upcoming feature of VimCalc. Redefining a variable is possible and is
@@ -527,6 +529,9 @@ the default window size.
 
 ==============================================================================
 8. Changelog                                                *vimcalc-changelog*
+
+1.3         Added :int and :float directives.
+            Made 'let' optional during assignment.
 
 1.2         Fixed a bug where global variables used for customisation were
             overwritten when VimCalc was sourced.
