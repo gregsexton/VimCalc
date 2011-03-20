@@ -372,8 +372,9 @@ def getID(token):
 #vcalc context-free grammar
 #line      -> directive | expr | assign
 #directive -> decDir | octDir | hexDir | intDir | floatDir
-#assign    -> let ident = expr | let ident += expr | let ident -= expr
-#             | let ident *= expr | let ident /= expr | let ident %= expr | let ident **= expr
+#assign    -> let assign' | assign'
+#assign'   ->  ident = expr | ident += expr | ident -= expr
+#             | ident *= expr | ident /= expr | ident %= expr | ident **= expr
 #expr      -> expr + term | expr - term | term
 #func      -> ident ( args )
 #args      -> expr , args | expr
@@ -384,9 +385,9 @@ def getID(token):
 #number    -> decnumber | hexnumber | octalnumber
 
 #vcalc context-free grammar LL(1) -- to be used with a recursive descent parser
-#line       -> directive | expr | assign
+#line       -> directive | assign | expr
 #directive  -> decDir | octDir | hexDir | intDir | floatDir
-#assign     -> let ident (=|+=|-=|*=|/=|%=|**=) expr
+#assign     -> [let] ident (=|+=|-=|*=|/=|%=|**=) expr
 #expr       -> term {(+|-) term}
 #func       -> ident ( args )
 #args       -> expr {, expr}
@@ -525,40 +526,44 @@ def directive(tokens):
     return ParseNode(False, 0, 0)
 
 def assign(tokens):
-    if map(getID, tokens[0:2]) == ['let', 'ident']:
-        exprNode = expr(tokens[3:])
-        if exprNode.consumeCount+3 == len(tokens):
-            symbol = tokens[1].attrib
-
-            #perform type of assignment
-            if symbolCheck('assign', 2, tokens):
-                result = exprNode.result
-            else:
-                result = lookupSymbol(symbol)
-                if symbolCheck('pAssign', 2, tokens):
-                    result = result + exprNode.result
-                elif symbolCheck('sAssign', 2, tokens):
-                    result = result - exprNode.result
-                elif symbolCheck('mAssign', 2, tokens):
-                    result = result * exprNode.result
-                elif symbolCheck('dAssign', 2, tokens):
-                    result = result / exprNode.result
-                elif symbolCheck('modAssign', 2, tokens):
-                    result = result % exprNode.result
-                elif symbolCheck('expAssign', 2, tokens):
-                    result = result ** exprNode.result
-                else:
-                    return ParseNode(False,0,2)
-
-            storeSymbol(symbol, result)
-            node = ParseNode(True, result, exprNode.consumeCount+3)
-            node.storeInAns = False
-            node.assignedSymbol = symbol
-            return node
-        else:
-            return ParseNode(False, 0, exprNode.consumeCount+3)
+    if symbolCheck('ident', 0, tokens):
+        assignPos = 1
+    elif map(getID, tokens[0:2]) == ['let', 'ident']:
+        assignPos = 2
     else:
         return ParseNode(False, 0, 0)
+
+    exprNode = expr(tokens[assignPos+1:])
+    if exprNode.consumeCount+assignPos+1 == len(tokens):
+        symbol = tokens[assignPos-1].attrib
+
+        #perform type of assignment
+        if symbolCheck('assign', assignPos, tokens):
+            result = exprNode.result
+        else:
+            result = lookupSymbol(symbol)
+            if symbolCheck('pAssign', assignPos, tokens):
+                result = result + exprNode.result
+            elif symbolCheck('sAssign', assignPos, tokens):
+                result = result - exprNode.result
+            elif symbolCheck('mAssign', assignPos, tokens):
+                result = result * exprNode.result
+            elif symbolCheck('dAssign', assignPos, tokens):
+                result = result / exprNode.result
+            elif symbolCheck('modAssign', assignPos, tokens):
+                result = result % exprNode.result
+            elif symbolCheck('expAssign', assignPos, tokens):
+                result = result ** exprNode.result
+            else:
+                return ParseNode(False,0,assignPos)
+
+        storeSymbol(symbol, result)
+        node = ParseNode(True, result, exprNode.consumeCount+assignPos+1)
+        node.storeInAns = False
+        node.assignedSymbol = symbol
+        return node
+    else:
+        return ParseNode(False, 0, exprNode.consumeCount+assignPos+1)
 
 def expr(tokens):
     termNode = term(tokens)
