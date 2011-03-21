@@ -1,9 +1,9 @@
-import vim, math, re, random
+#AUTHOR:   Greg Sexton <gregsexton@gmail.com>
+#WEBSITE:  https://github.com/gregsexton/VimCalc
+#VERSION:  1.3, for Vim 7.0+
+#LICENSE:  Same terms as Vim itself (see :help license).
 
-def repl(expr):
-    if expr != "":
-        result = parse(expr)
-        vim.command("call append(line('$'), \"" + result + "\")")
+import math, re, random
 
 #### lexical analysis functions ##################################################
 

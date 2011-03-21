@@ -142,6 +142,7 @@ function! s:VCalc_REPL(continueInsert)
     endif
 
     call <SID>VCalc_RecordHistory(expr)
+    "TODO: this breaks if a double quoted string is inputed.
     exe "python repl(\"" . expr . "\")"
 
     let failed = append(line('$'), g:VCalc_Prompt)
@@ -199,3 +200,22 @@ function! s:VCalc_CreateCWInsertMappings()
         imap <buffer> <silent> <C-W>W <ESC><C-W>W
     endif
 endfunction
+
+" **********************************************************************************************************
+" **** PYTHON **********************************************************************************************
+" **********************************************************************************************************
+
+if has('python')
+
+python << EOF
+
+import vim
+
+def repl(expr):
+    if expr != "":
+        result = parse(expr)
+        vim.command("call append(line('$'), \"" + result + "\")")
+
+EOF
+
+endif
