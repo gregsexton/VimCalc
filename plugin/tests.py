@@ -186,6 +186,46 @@ class PrecisionTestCase(unittest.TestCase):
         assert vimcalc.parse(":float") == "CHANGED OUTPUT PRECISION TO FLOATING POINT."
         assert vimcalc.parse("(8/3) * (4/3)") == "ans = 3.55555555556"
 
+class MiscDirectivesTestCase(unittest.TestCase):
+    def setUp(self):
+        vimcalc.parse(":dec")
+        vimcalc.parse(":float")
+
+    def tearDown(self):
+        vimcalc.parse(":dec")
+        vimcalc.parse(":float")
+
+    def testStatusSanity(self):
+        assert vimcalc.parse(":status") != "Syntax error: :status"
+
+    def testStatus(self):
+        assert vimcalc.parse(":status") == "STATUS: OUTPUT BASE: DECIMAL; PRECISION: FLOATING POINT."
+        vimcalc.parse(":hex")
+        assert vimcalc.parse(":status") == "STATUS: OUTPUT BASE: HEXADECIMAL; PRECISION: FLOATING POINT."
+        vimcalc.parse(":oct")
+        assert vimcalc.parse(":status") == "STATUS: OUTPUT BASE: OCTAL; PRECISION: FLOATING POINT."
+        vimcalc.parse(":int")
+        vimcalc.parse(":dec")
+        assert vimcalc.parse(":status") == "STATUS: OUTPUT BASE: DECIMAL; PRECISION: INTEGER."
+        vimcalc.parse(":hex")
+        assert vimcalc.parse(":status") == "STATUS: OUTPUT BASE: HEXADECIMAL; PRECISION: INTEGER."
+        vimcalc.parse(":oct")
+        assert vimcalc.parse(":status") == "STATUS: OUTPUT BASE: OCTAL; PRECISION: INTEGER."
+
+    def testStatusShorthand(self):
+        assert vimcalc.parse(":s") == "STATUS: OUTPUT BASE: DECIMAL; PRECISION: FLOATING POINT."
+        vimcalc.parse(":hex")
+        assert vimcalc.parse(":s") == "STATUS: OUTPUT BASE: HEXADECIMAL; PRECISION: FLOATING POINT."
+        vimcalc.parse(":oct")
+        assert vimcalc.parse(":s") == "STATUS: OUTPUT BASE: OCTAL; PRECISION: FLOATING POINT."
+        vimcalc.parse(":int")
+        vimcalc.parse(":dec")
+        assert vimcalc.parse(":s") == "STATUS: OUTPUT BASE: DECIMAL; PRECISION: INTEGER."
+        vimcalc.parse(":hex")
+        assert vimcalc.parse(":s") == "STATUS: OUTPUT BASE: HEXADECIMAL; PRECISION: INTEGER."
+        vimcalc.parse(":oct")
+        assert vimcalc.parse(":s") == "STATUS: OUTPUT BASE: OCTAL; PRECISION: INTEGER."
+
 class ErrorMessagesTestCase(unittest.TestCase):
     def testNonExistantBuiltin(self):
         assert vimcalc.parse("foo()") == "Parse error: built-in function 'foo' does not exist."

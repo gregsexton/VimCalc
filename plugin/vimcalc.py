@@ -123,6 +123,8 @@ lexemes = [Lexeme('whitespace', r'\s+'),
            Lexeme('decDir',     r':dec'),
            Lexeme('hexDir',     r':hex'),
            Lexeme('octDir',     r':oct'),
+           Lexeme('statusDir',  r':status'),
+           Lexeme('statusDir',  r':s'),         #shorthand
            Lexeme('intDir',     r':int'),
            Lexeme('floatDir',   r':float') ]
 
@@ -319,6 +321,8 @@ def directive(tokens):
     if symbolCheck('intDir', 0, tokens):
         VCALC_OUTPUT_PRECISION = 'int'
         return createDirectiveParseNode('CHANGED OUTPUT PRECISION TO INTEGER.')
+    if symbolCheck('statusDir', 0, tokens):
+        return createDirectiveParseNode(statusMessage())
     return ParseNode(False, 0, 0)
 
 def assign(tokens):
@@ -524,6 +528,17 @@ def createDirectiveParseNode(outputMsg):
     node.storeInAns = False
     node.assignedSymbol = None
     return node
+
+def statusMessage():
+    global VCALC_OUTPUT_BASE
+    global VCALC_OUTPUT_PRECISION
+
+    base = VCALC_OUTPUT_BASE.upper()
+    if VCALC_OUTPUT_PRECISION   == 'float' : precision = 'FLOATING POINT'
+    elif VCALC_OUTPUT_PRECISION == 'int'   : precision = 'INTEGER'
+    else: VCALC_OUTPUT_PRECISION = 'ERROR'
+    msg = "STATUS: OUTPUT BASE: %s; PRECISION: %s." % (base, precision)
+    return msg
 
 #rather literal haskell implementation of this, proably very
 #unpythonic and inefficient. Should do for the needs of vimcalc
