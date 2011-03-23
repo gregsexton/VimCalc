@@ -168,6 +168,9 @@ are:
                 are evaluated using floating point precision arithmetic. This
                 is the default.
 
+    |:s[tatus]|   This has no effect on the environment. It displays a status
+                message informing  of the state of the environment.
+
 The :dec, :hex and :oct directives are particularly useful for converting
 between the different number bases. Numbers are still evaluated by the REPL
 based on how they are entered, i.e the number '10' is always the decimal
@@ -207,6 +210,12 @@ to an integer. For example:
 <
 The integer mode answer to this expression was 2 rather than 3 as the
 sub-expressions (8/3) and (4/3) were calculated also in integer mode.
+
+The :status directive gives a brief summary of the current state of the REPL
+environment. It can be shortened to ":s". This is an example output.
+>
+    > :status
+    STATUS: OUTPUT BASE: DECIMAL; PRECISION: FLOATING POINT.
 
 ==============================================================================
 4. Operators                                                *vimcalc-operators*

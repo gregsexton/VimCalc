@@ -19,7 +19,7 @@ syntax keyword vcalcLet let
 
 syntax keyword vcalcFuncs abs acos asin atan atan2 ceil choose cos cosh deg exp floor hypot inv ldexp lg ln log log10 max min nrt perms pow rad rand round sin sinh sqrt tan tanh
 
-syntax match vcalcDirectives ":hex\|:oct\|:dec\|:int\|:float"
+syntax match vcalcDirectives "\(:hex\|:oct\|:dec\|:int\|:float\|:status\|:s\)\s*$"
 
 syntax match vcalcOps "\*\*=\|%=\|/=\|\*=\|-=\|+=\|<<\|>>\|\*\*\|=\|!\|%\|/\|\*\|-\|+"
 syntax match vcalcDelim "(\|)"
@@ -35,6 +35,14 @@ if g:VCalc_Prompt != ''
     silent execute "syn match vcalcPrompt '" . g:VCalc_Prompt . "'"
     hi def link vcalcPrompt Type
 endif
+
+syntax match vcalcDecDirOutput    "CHANGED OUTPUT BASE TO DECIMAL."
+syntax match vcalcHexDirOutput    "CHANGED OUTPUT BASE TO HEXADECIMAL."
+syntax match vcalcOctDirOutput    "CHANGED OUTPUT BASE TO OCTAL."
+syntax match vcalcFloatDirOutput  "CHANGED OUTPUT PRECISION TO FLOATING POINT."
+syntax match vcalcIntDirOutput    "CHANGED OUTPUT PRECISION TO INTEGER."
+syntax match vcalcStatusVariables display contained "DECIMAL\|HEXADECIMAL\|OCTAL\|INTEGER\|FLOATING POINT"
+syntax region vcalcStatusDirOutput start="STATUS:" end="\." contains=vcalcStatusVariables
 
 if version >= 600
 	command -nargs=+ HiLink highlight default link <args>
@@ -75,6 +83,16 @@ HiLink vcalcNumber      Number
 HiLink vcalcSynErr      vcalcError
 HiLink vcalcParErr      vcalcError
 HiLink vcalcError       Error
+
+HiLink vcalcDecDirOutput    vcalcDirOutput
+HiLink vcalcHexDirOutput    vcalcDirOutput
+HiLink vcalcOctDirOutput    vcalcDirOutput
+HiLink vcalcFloatDirOutput  vcalcDirOutput
+HiLink vcalcIntDirOutput    vcalcDirOutput
+HiLink vcalcStatusDirOutput vcalcDirOutput
+HiLink vcalcDirOutput       PreProc
+
+HiLink vcalcStatusVariables Statement
 
 delcommand HiLink
 
