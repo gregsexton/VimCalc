@@ -191,6 +191,10 @@ class VarListingTestCase(unittest.TestCase):
     def setUp(self):
         self.resetSymbolTable()
 
+    def tearDown(self):
+        vimcalc.parse(":float")
+        vimcalc.parse(":dec")
+
     def resetSymbolTable(self):
         temp = { 'ans' : 0,
                  'e'   : vimcalc.VCALC_SYMBOL_TABLE['e'],
@@ -213,6 +217,20 @@ class VarListingTestCase(unittest.TestCase):
         assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 2.71828182846\n phi : 1.61803398875\n pi : 3.14159265359\n x : 2.0\n"
         assert vimcalc.parse("a = 2") == "a = 2.0"
         assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n a : 2.0\n ans : 0\n e : 2.71828182846\n phi : 1.61803398875\n pi : 3.14159265359\n x : 2.0\n"
+
+    def testChangeMode(self):
+        vimcalc.parse(":dec")
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 2.71828182846\n phi : 1.61803398875\n pi : 3.14159265359\n"
+        vimcalc.parse(":hex")
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0x0\n e : 0x2\n phi : 0x1\n pi : 0x3\n"
+        vimcalc.parse(":oct")
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 02\n phi : 01\n pi : 03\n"
+
+    def testChangePrecision(self):
+        vimcalc.parse(":float")
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 2.71828182846\n phi : 1.61803398875\n pi : 3.14159265359\n"
+        vimcalc.parse(":int")
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 2\n phi : 1\n pi : 3\n"
 
 class MiscDirectivesTestCase(unittest.TestCase):
     def setUp(self):

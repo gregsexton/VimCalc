@@ -550,7 +550,7 @@ def variablesMessage():
     items = VCALC_SYMBOL_TABLE.items()
     items.sort()
     for k,v in items:
-        msg += " " + k + " : " + str(v) + "\n"
+        msg += " " + k + " : " + process(v) + "\n"
     return msg
 
 #rather literal haskell implementation of this, proably very
