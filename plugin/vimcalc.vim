@@ -214,7 +214,8 @@ import vim
 def repl(expr):
     if expr != "":
         result = parse(expr)
-        vim.command("call append(line('$'), \"" + result + "\")")
+        for str in result.split("\n"):
+            vim.command("call append(line('$'), \"" + str + "\")")
 
 EOF
 

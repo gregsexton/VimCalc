@@ -1,5 +1,6 @@
 import unittest
 import vimcalc
+import math
 
 class SanityCheckTestCase(unittest.TestCase):
     def runTest(self):
@@ -185,6 +186,33 @@ class PrecisionTestCase(unittest.TestCase):
     def testFloat(self):
         assert vimcalc.parse(":float") == "CHANGED OUTPUT PRECISION TO FLOATING POINT."
         assert vimcalc.parse("(8/3) * (4/3)") == "ans = 3.55555555556"
+
+class VarListingTestCase(unittest.TestCase):
+    def setUp(self):
+        self.resetSymbolTable()
+
+    def resetSymbolTable(self):
+        temp = { 'ans' : 0,
+                 'e'   : vimcalc.VCALC_SYMBOL_TABLE['e'],
+                 'pi'  : vimcalc.VCALC_SYMBOL_TABLE['pi'],
+                 'phi' : vimcalc.VCALC_SYMBOL_TABLE['phi'] }
+        vimcalc.VCALC_SYMBOL_TABLE = temp
+
+    def testSanity(self):
+        assert len(vimcalc.VCALC_SYMBOL_TABLE)   == 4
+        assert vimcalc.VCALC_SYMBOL_TABLE['ans'] == 0
+        assert vimcalc.VCALC_SYMBOL_TABLE['e']   == math.e
+        assert vimcalc.VCALC_SYMBOL_TABLE['pi']  == math.pi
+        assert vimcalc.VCALC_SYMBOL_TABLE['phi'] == 1.6180339887498948482
+
+    def testDefault(self):
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 2.71828182846\n phi : 1.61803398875\n pi : 3.14159265359\n"
+
+    def testAddVars(self):
+        assert vimcalc.parse("x = 2") == "x = 2.0"
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 2.71828182846\n phi : 1.61803398875\n pi : 3.14159265359\n x : 2.0\n"
+        assert vimcalc.parse("a = 2") == "a = 2.0"
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n a : 2.0\n ans : 0\n e : 2.71828182846\n phi : 1.61803398875\n pi : 3.14159265359\n x : 2.0\n"
 
 class MiscDirectivesTestCase(unittest.TestCase):
     def setUp(self):

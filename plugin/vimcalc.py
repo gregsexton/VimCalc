@@ -66,7 +66,9 @@ import math, re, random
 #octDir     = ':oct'
 #intDir     = ':int'
 #floatDir   = ':float'
-#directives = decDir | hexDir | octDir | intDir | floatDir
+#statusDir  = ':status' | ':s'
+#varDir     = ':vars'
+#directives = decDir | hexDir | octDir | intDir | floatDir | statusDir | varDir
 
 class Token(object):
     def __init__(self, tokenID, attrib):
@@ -125,6 +127,7 @@ lexemes = [Lexeme('whitespace', r'\s+'),
            Lexeme('octDir',     r':oct'),
            Lexeme('statusDir',  r':status'),
            Lexeme('statusDir',  r':s'),         #shorthand
+           Lexeme('varDir',     r':vars'),
            Lexeme('intDir',     r':int'),
            Lexeme('floatDir',   r':float') ]
 
@@ -169,7 +172,7 @@ def getID(token):
 
 #vcalc context-free grammar
 #line      -> directive | expr | assign
-#directive -> decDir | octDir | hexDir | intDir | floatDir
+#directive -> decDir | octDir | hexDir | intDir | floatDir | statusDir | varDir
 #assign    -> let assign' | assign'
 #assign'   ->  ident = expr | ident += expr | ident -= expr
 #             | ident *= expr | ident /= expr | ident %= expr | ident **= expr
@@ -184,7 +187,7 @@ def getID(token):
 
 #vcalc context-free grammar LL(1) -- to be used with a recursive descent parser
 #line       -> directive | assign | expr
-#directive  -> decDir | octDir | hexDir | intDir | floatDir
+#directive  -> decDir | octDir | hexDir | intDir | floatDir | statusDir | varDir
 #assign     -> [let] ident (=|+=|-=|*=|/=|%=|**=) expr
 #expr       -> term {(+|-) term}
 #func       -> ident ( args )
@@ -323,6 +326,8 @@ def directive(tokens):
         return createDirectiveParseNode('CHANGED OUTPUT PRECISION TO INTEGER.')
     if symbolCheck('statusDir', 0, tokens):
         return createDirectiveParseNode(statusMessage())
+    if symbolCheck('varDir', 0, tokens):
+        return createDirectiveParseNode(variablesMessage())
     return ParseNode(False, 0, 0)
 
 def assign(tokens):
@@ -538,6 +543,14 @@ def statusMessage():
     elif VCALC_OUTPUT_PRECISION == 'int'   : precision = 'INTEGER'
     else: VCALC_OUTPUT_PRECISION = 'ERROR'
     msg = "STATUS: OUTPUT BASE: %s; PRECISION: %s." % (base, precision)
+    return msg
+
+def variablesMessage():
+    msg = "VARIABLES:\n----------\n"
+    items = VCALC_SYMBOL_TABLE.items()
+    items.sort()
+    for k,v in items:
+        msg += " " + k + " : " + str(v) + "\n"
     return msg
 
 #rather literal haskell implementation of this, proably very
