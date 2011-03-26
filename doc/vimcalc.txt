@@ -169,7 +169,10 @@ are:
                 is the default.
 
     |:s[tatus]|   This has no effect on the environment. It displays a status
-                message informing  of the state of the environment.
+                message informing as to the state of the environment.
+
+    |:vars|       This has no effect on the environment. It displays a list of
+                all of the currently bound variables and their assigned value.
 
 The :dec, :hex and :oct directives are particularly useful for converting
 between the different number bases. Numbers are still evaluated by the REPL
@@ -216,6 +219,22 @@ environment. It can be shortened to ":s". This is an example output.
 >
     > :status
     STATUS: OUTPUT BASE: DECIMAL; PRECISION: FLOATING POINT.
+<
+
+The :vars directive lists all of the currently bound variables and their
+assigned values. Here is a sample usage.
+>
+    > let x = 3.0
+    x = 3.0
+    > :vars
+    VARIABLES:
+    ----------
+     ans : 4.0
+     e   : 2.71828182846
+     phi : 1.61803398875
+     pi  : 3.14159265359
+     x   : 3.0
+<
 
 ==============================================================================
 4. Operators                                                *vimcalc-operators*
@@ -404,6 +423,9 @@ It is not necessary to declare a variable before assigning it and the type is
 always internally defined as a float. Arbitrary precision evaluation is a high
 priority upcoming feature of VimCalc. Redefining a variable is possible and is
 done by specifying it again in a new assignment.
+
+Note: To get a listing of all currently assigned variables the :vars directive
+can be used, see |vimcalc-directives|.
 
 6.2 Variable Scope                                     *vimcalc-variable-scope*
 
