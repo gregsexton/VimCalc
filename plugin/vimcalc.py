@@ -547,10 +547,15 @@ def statusMessage():
 
 def variablesMessage():
     msg = "VARIABLES:\n----------\n"
+    #find the longest variable length for alignment
+    width = 0
+    for k in VCALC_SYMBOL_TABLE.keys():
+        width = max(width, len(k))
+
     items = VCALC_SYMBOL_TABLE.items()
     items.sort()
     for k,v in items:
-        msg += " " + k + " : " + process(v) + "\n"
+        msg += " " + k.ljust(width) + " : " + process(v) + "\n"
     return msg
 
 #rather literal haskell implementation of this, proably very

@@ -210,27 +210,32 @@ class VarListingTestCase(unittest.TestCase):
         assert vimcalc.VCALC_SYMBOL_TABLE['phi'] == 1.6180339887498948482
 
     def testDefault(self):
-        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 2.71828182846\n phi : 1.61803398875\n pi : 3.14159265359\n"
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e   : 2.71828182846\n phi : 1.61803398875\n pi  : 3.14159265359\n"
 
     def testAddVars(self):
+        #tests they get added and alphabetically
         assert vimcalc.parse("x = 2") == "x = 2.0"
-        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 2.71828182846\n phi : 1.61803398875\n pi : 3.14159265359\n x : 2.0\n"
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e   : 2.71828182846\n phi : 1.61803398875\n pi  : 3.14159265359\n x   : 2.0\n"
         assert vimcalc.parse("a = 2") == "a = 2.0"
-        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n a : 2.0\n ans : 0\n e : 2.71828182846\n phi : 1.61803398875\n pi : 3.14159265359\n x : 2.0\n"
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n a   : 2.0\n ans : 0\n e   : 2.71828182846\n phi : 1.61803398875\n pi  : 3.14159265359\n x   : 2.0\n"
 
     def testChangeMode(self):
         vimcalc.parse(":dec")
-        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 2.71828182846\n phi : 1.61803398875\n pi : 3.14159265359\n"
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e   : 2.71828182846\n phi : 1.61803398875\n pi  : 3.14159265359\n"
         vimcalc.parse(":hex")
-        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0x0\n e : 0x2\n phi : 0x1\n pi : 0x3\n"
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0x0\n e   : 0x2\n phi : 0x1\n pi  : 0x3\n"
         vimcalc.parse(":oct")
-        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 02\n phi : 01\n pi : 03\n"
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e   : 02\n phi : 01\n pi  : 03\n"
 
     def testChangePrecision(self):
         vimcalc.parse(":float")
-        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 2.71828182846\n phi : 1.61803398875\n pi : 3.14159265359\n"
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e   : 2.71828182846\n phi : 1.61803398875\n pi  : 3.14159265359\n"
         vimcalc.parse(":int")
-        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e : 2\n phi : 1\n pi : 3\n"
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans : 0\n e   : 2\n phi : 1\n pi  : 3\n"
+
+    def testAlignment(self):
+        assert vimcalc.parse("let reallyLongName = 2") == "reallyLongName = 2.0"
+        assert vimcalc.parse(":vars") == "VARIABLES:\n----------\n ans            : 0\n e              : 2.71828182846\n phi            : 1.61803398875\n pi             : 3.14159265359\n reallyLongName : 2.0\n"
 
 class MiscDirectivesTestCase(unittest.TestCase):
     def setUp(self):
