@@ -563,6 +563,9 @@ the default window size.
 
 1.3         Added :int and :float directives.
             Made 'let' optional during assignment.
+            Everything is unit tested.
+            Added :status directive and improved directive highlighting.
+            Added :vars directive.
 
 1.2         Fixed a bug where global variables used for customisation were
             overwritten when VimCalc was sourced.
