@@ -5,7 +5,7 @@
 
 import math, re, random
 
-#### lexical analysis functions ##################################################
+#### LEXICAL ANALYSIS FUNCTIONS ##################################################
 
 #lexemes
 #digit  = [0-9]
@@ -164,7 +164,7 @@ def getAttrib(token):
 def getID(token):
     return token.ID
 
-#### parser functions ##############################################################
+#### PARSER FUNCTIONS ############################################################
 
 #TODO: this is all a bit messy due to passing essentially a vector around
 # instead of a list and not having shared state. Could be made a
@@ -484,7 +484,7 @@ def number(tokens):
     else:
         return ParseNode(False, 0, 0)
 
-#### helper functions for use by the parser ########################################
+#### HELPER FUNCTIONS FOR USE BY THE PARSER AND REPL #############################
 
 def foldlParse(parsefn, resfn, symbol, initial, tokens):
     consumed = 0
@@ -573,7 +573,7 @@ def snoc(seq, x):  #TODO: find more pythonic way of doing this
     a.append(x)
     return a
 
-#### symbol table manipulation functions ###########################################
+#### SYMBOL TABLE MANIPULATION FUNCTIONS #########################################
 
 #global symbol table NOTE: these can be rebound
 VCALC_SYMBOL_TABLE = {'ans':0,
@@ -592,7 +592,7 @@ def storeSymbol(symbol, value):
     VCALC_SYMBOL_TABLE[symbol] = value
 
 
-#### mathematical functions (built-ins) ############################################
+#### VIMCALC BUILTIN FUNCTIONS ###################################################
 
 def loge(n):
     return math.log(n)
