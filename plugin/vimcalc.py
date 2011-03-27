@@ -68,7 +68,8 @@ import math, re, random
 #floatDir   = ':float'
 #statusDir  = ':status' | ':s'
 #varDir     = ':vars'
-#directives = decDir | hexDir | octDir | intDir | floatDir | statusDir | varDir
+#quitDir    = ':q'
+#directives = decDir | hexDir | octDir | intDir | floatDir | statusDir | varDir | quitDir
 
 class Token(object):
     def __init__(self, tokenID, attrib):
@@ -128,6 +129,7 @@ lexemes = [Lexeme('whitespace', r'\s+'),
            Lexeme('statusDir',  r':status'),
            Lexeme('statusDir',  r':s'),         #shorthand
            Lexeme('varDir',     r':vars'),
+           Lexeme('quitDir',    r':q'),
            Lexeme('intDir',     r':int'),
            Lexeme('floatDir',   r':float') ]
 
@@ -172,7 +174,7 @@ def getID(token):
 
 #vcalc context-free grammar
 #line      -> directive | expr | assign
-#directive -> decDir | octDir | hexDir | intDir | floatDir | statusDir | varDir
+#directive -> decDir | octDir | hexDir | intDir | floatDir | statusDir | varDir | quitDir
 #assign    -> let assign' | assign'
 #assign'   ->  ident = expr | ident += expr | ident -= expr
 #             | ident *= expr | ident /= expr | ident %= expr | ident **= expr
@@ -187,7 +189,7 @@ def getID(token):
 
 #vcalc context-free grammar LL(1) -- to be used with a recursive descent parser
 #line       -> directive | assign | expr
-#directive  -> decDir | octDir | hexDir | intDir | floatDir | statusDir | varDir
+#directive  -> decDir | octDir | hexDir | intDir | floatDir | statusDir | varDir | quitDir
 #assign     -> [let] ident (=|+=|-=|*=|/=|%=|**=) expr
 #expr       -> term {(+|-) term}
 #func       -> ident ( args )
@@ -328,6 +330,8 @@ def directive(tokens):
         return createDirectiveParseNode(statusMessage())
     if symbolCheck('varDir', 0, tokens):
         return createDirectiveParseNode(variablesMessage())
+    if symbolCheck('quitDir', 0, tokens):
+        return createDirectiveParseNode('!!!q!!!')
     return ParseNode(False, 0, 0)
 
 def assign(tokens):

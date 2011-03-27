@@ -277,6 +277,9 @@ class MiscDirectivesTestCase(unittest.TestCase):
         vimcalc.parse(":oct")
         assert vimcalc.parse(":s") == "STATUS: OUTPUT BASE: OCTAL; PRECISION: INTEGER."
 
+    def testQuitDirective(self):
+        assert vimcalc.parse(":q") == "!!!q!!!"
+
 class ErrorMessagesTestCase(unittest.TestCase):
     def testNonExistantBuiltin(self):
         assert vimcalc.parse("foo()") == "Parse error: built-in function 'foo' does not exist."

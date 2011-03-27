@@ -145,6 +145,12 @@ function! s:VCalc_REPL(continueInsert)
     "TODO: this breaks if a double quoted string is inputed.
     exe "python repl(\"" . expr . "\")"
 
+    "if executed command don't continue -- may be a ':q'
+    if exists("w:vcalc_vim_command")
+        stopinsert
+        return
+    endif
+
     let failed = append(line('$'), g:VCalc_Prompt)
 
     let b:VCalc_History_Index = -1
@@ -214,9 +220,16 @@ import vim
 def repl(expr):
     if expr != "":
         result = parse(expr)
-        for str in result.split("\n"):
-            vim.command("call append(line('$'), \"" + str + "\")")
-
+        #if result is of the form: "!!!.*!!!" it is a vim command to execute.
+        m = re.match(r"^!!!(.*)!!!$", result)
+        if m:
+            vim.command("call append(line('$'), g:VCalc_Prompt)") #add prompt
+            vim.command(m.group(1))
+            vim.command("let w:vcalc_vim_command = 1")
+        else:
+            for str in result.split("\n"):
+                vim.command("call append(line('$'), \"" + str + "\")")
+            vim.command("if exists(\"w:vcalc_vim_command\") | unlet w:vcalc_vim_command | endif")
 EOF
 
 endif
