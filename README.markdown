@@ -16,7 +16,7 @@ then re-evaluate them by simply hitting return. Once you've got the answers yank
 them into several registers and paste with ease into other buffers!
 
 Here are some example expressions run in a VimCalc session:
-<code>
+    
     > 5+4
     ans = 9.0
     > let x = 4
@@ -27,11 +27,10 @@ Here are some example expressions run in a VimCalc session:
     ans = 77.0
     > 0xff + 2
     ans = 257.0
-</code>
 
 Here is an example of calculating the roots of a quadratic
 equation:
-<code>
+
     > let a = 2
     a = 2.0
     > let b = -1
@@ -42,7 +41,6 @@ equation:
     ans = 2.0
     > ((b*-1) - sqrt(b**2 - 4*a*c))/(2*a)
     ans = -1.5
-</code>
 
 ##Installation
 
