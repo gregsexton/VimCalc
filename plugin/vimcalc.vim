@@ -204,6 +204,15 @@ function! s:VCalc_CreateCWInsertMappings()
         imap <buffer> <silent> <C-W>t <ESC><C-W>t
         imap <buffer> <silent> <C-W>w <ESC><C-W>w
         imap <buffer> <silent> <C-W>W <ESC><C-W>W
+        "for lazy fingers:
+        imap <buffer> <silent> <C-W><c-l> <ESC><C-W>l
+        imap <buffer> <silent> <C-W><c-k> <ESC><C-W>k
+        imap <buffer> <silent> <C-W><c-j> <ESC><C-W>j
+        imap <buffer> <silent> <C-W><c-h> <ESC><C-W>h
+        imap <buffer> <silent> <C-W><c-b> <ESC><C-W>b
+        imap <buffer> <silent> <C-W><c-t> <ESC><C-W>t
+        imap <buffer> <silent> <C-W><c-w> <ESC><C-W>w
+        imap <buffer> <silent> <C-W><c-W> <ESC><C-W>W
     endif
 endfunction
 
