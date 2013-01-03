@@ -23,6 +23,18 @@ class OperatorTestCase(unittest.TestCase):
         assert vimcalc.parse("5%4") == "ans = 1.0", 'modulo'
         assert vimcalc.parse("4%5") == "ans = 4.0", 'modulo'
 
+    def testAnd(self):
+        assert vimcalc.parse("5&3")  == "ans = 1", 'bitwise and'
+        assert vimcalc.parse("3&2")  == "ans = 2", 'bitwise and'
+        assert vimcalc.parse("6&13") == "ans = 4", 'bitwise and'
+
+    def testOr(self):
+        assert vimcalc.parse("5|3") == "ans = 7", 'bitwise or'
+
+    def testXor(self):
+        assert vimcalc.parse("5^3")  == "ans = 6", 'bitwise xor'
+        assert vimcalc.parse("2^10") == "ans = 8", 'bitwise xor'
+
     def testExponent(self):
         assert vimcalc.parse("5**4") == "ans = 625.0", 'exponent'
 
@@ -85,6 +97,21 @@ class OperatorAssociativityTestCase(unittest.TestCase):
         assert vimcalc.parse("(4-3)-2") == "ans = -1.0"
         assert vimcalc.parse("4-(3-2)") == "ans = 3.0"
 
+    def testAnd(self):
+        assert vimcalc.parse("(1&3)&9") == "ans = 1"
+        assert vimcalc.parse("1&(3&9)") == "ans = 1"
+        assert vimcalc.parse("1&3&9")   == "ans = 1"
+
+    def testOr(self):
+        assert vimcalc.parse("(1|3)|9") == "ans = 11"
+        assert vimcalc.parse("1|(3|9)") == "ans = 11"
+        assert vimcalc.parse("1|3|9")   == "ans = 11"
+
+    def testXor(self):
+        assert vimcalc.parse("(1^3)^9") == "ans = 11"
+        assert vimcalc.parse("1^(3^9)") == "ans = 11"
+        assert vimcalc.parse("1^3^9")   == "ans = 11"
+
     #right-to-left
     def testExponent(self):
         assert vimcalc.parse("(2**2)**3") == "ans = 64.0"
@@ -141,6 +168,30 @@ class AssignmentTestCase(unittest.TestCase):
         vimcalc.parse("x = 4")
         vimcalc.parse("y = 5")
         assert vimcalc.parse("let y %= x") == "y = 1.0"
+
+    def testAndAssign(self):
+        vimcalc.parse("x = 5")
+        vimcalc.parse("y = 3")
+        assert vimcalc.parse("let x &= y") == "x = 1"
+        vimcalc.parse("x = 3")
+        vimcalc.parse("y = 2")
+        assert vimcalc.parse("let x &= y") == "x = 2"
+        vimcalc.parse("x = 6")
+        vimcalc.parse("y = 13")
+        assert vimcalc.parse("let x &= y") == "x = 4"
+
+    def testOrAssign(self):
+        vimcalc.parse("x = 5")
+        vimcalc.parse("y = 3")
+        assert vimcalc.parse("let x |= y") == "x = 7"
+
+    def testXorAssign(self):
+        vimcalc.parse("x = 5")
+        vimcalc.parse("y = 3")
+        assert vimcalc.parse("let x ^= y")  == "x = 6"
+        vimcalc.parse("x = 2")
+        vimcalc.parse("y = 10")
+        assert vimcalc.parse("let x ^= y") == "x = 8"
 
     def testExpAssign(self):
         vimcalc.parse("x = 4")

@@ -281,6 +281,7 @@ turn. This is done with left-to-right associativity.
     3           %           Modulus                             Left-to-right
     3           << >>       Arithmetic left and right shift.    Left-to-right
     3           !           Factorial (bang).                   Left-to-right
+    3           & | ^       Bitwise (and, or, xor)              Left-to-right
 
     4           + -         Addition and subtraction.           Left-to-right
 
@@ -289,6 +290,7 @@ turn. This is done with left-to-right associativity.
     5           *= /=       Assignment by product and division. Right-to-left
     5           %=          Assignment by remainder (modulus).  Right-to-left
     5           **=         Assignment by exponent.             Right-to-left
+    5           &= |= ^=    Assignment by bitwise operation.    Right-to-left
 
 ==============================================================================
 5. Functions                                                *vimcalc-functions*
@@ -456,6 +458,9 @@ already defined.
     let x /=  y     let x = x /  y
     let x %=  y     let x = x %  y
     let x **= y     let x = x ** y
+    let x &=  7     let x = x &  y
+    let x |=  7     let x = x |  y
+    let x ^=  7     let x = x ^  y
 
 6.4 Built-in Variables                              *vimcalc-builtin-variables*
 
