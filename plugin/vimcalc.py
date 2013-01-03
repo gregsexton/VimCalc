@@ -367,12 +367,15 @@ def assign(tokens):
                 result = result / exprNode.result
             elif symbolCheck('modAssign', assignPos, tokens):
                 result = result % exprNode.result
+
+            #arguments to bitwise operations must be plain or long integers
             elif symbolCheck('andAssign', assignPos, tokens):
                 result = int(result) & int(exprNode.result)
             elif symbolCheck('orAssign', assignPos, tokens):
                 result = int(result) | int(exprNode.result)
             elif symbolCheck('xorAssign', assignPos, tokens):
                 result = int(result) ^ int(exprNode.result)
+
             elif symbolCheck('expAssign', assignPos, tokens):
                 result = result ** exprNode.result
             else:
