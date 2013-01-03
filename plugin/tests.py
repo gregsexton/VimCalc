@@ -97,6 +97,21 @@ class OperatorAssociativityTestCase(unittest.TestCase):
         assert vimcalc.parse("(4-3)-2") == "ans = -1.0"
         assert vimcalc.parse("4-(3-2)") == "ans = 3.0"
 
+    def testAnd(self):
+        assert vimcalc.parse("(1&3)&9") == "ans = 1"
+        assert vimcalc.parse("1&(3&9)") == "ans = 1"
+        assert vimcalc.parse("1&3&9")   == "ans = 1"
+
+    def testOr(self):
+        assert vimcalc.parse("(1|3)|9") == "ans = 11"
+        assert vimcalc.parse("1|(3|9)") == "ans = 11"
+        assert vimcalc.parse("1|3|9")   == "ans = 11"
+
+    def testXor(self):
+        assert vimcalc.parse("(1^3)^9") == "ans = 11"
+        assert vimcalc.parse("1^(3^9)") == "ans = 11"
+        assert vimcalc.parse("1^3^9")   == "ans = 11"
+
     #right-to-left
     def testExponent(self):
         assert vimcalc.parse("(2**2)**3") == "ans = 64.0"
