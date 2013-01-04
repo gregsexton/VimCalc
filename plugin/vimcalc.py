@@ -110,6 +110,9 @@ lexemes = [Lexeme('whitespace', r'\s+'),
            Lexeme('mAssign',    r'\*='),
            Lexeme('sAssign',    r'-='),
            Lexeme('pAssign',    r'\+='),
+           Lexeme('andAssign',  r'\&='),
+           Lexeme('orAssign',   r'\|='),
+           Lexeme('xorAssign',  r'\^='),
            Lexeme('lShift',     r'<<'),
            Lexeme('rShift',     r'>>'),
            Lexeme('exponent',   r'\*\*'),
@@ -123,6 +126,9 @@ lexemes = [Lexeme('whitespace', r'\s+'),
            Lexeme('multiply',   r'\*'),
            Lexeme('subtract',   r'-'),
            Lexeme('plus',       r'\+'),
+           Lexeme('and',        r'\&'),
+           Lexeme('or',         r'\|'),
+           Lexeme('xor',        r'\^'),
            Lexeme('decDir',     r':dec'),
            Lexeme('hexDir',     r':hex'),
            Lexeme('octDir',     r':oct'),
@@ -361,6 +367,15 @@ def assign(tokens):
                 result = result / exprNode.result
             elif symbolCheck('modAssign', assignPos, tokens):
                 result = result % exprNode.result
+
+            #arguments to bitwise operations must be plain or long integers
+            elif symbolCheck('andAssign', assignPos, tokens):
+                result = int(result) & int(exprNode.result)
+            elif symbolCheck('orAssign', assignPos, tokens):
+                result = int(result) | int(exprNode.result)
+            elif symbolCheck('xorAssign', assignPos, tokens):
+                result = int(result) ^ int(exprNode.result)
+
             elif symbolCheck('expAssign', assignPos, tokens):
                 result = result ** exprNode.result
             else:
@@ -422,8 +437,12 @@ def term(tokens):
     if factNode.success:
         foldNode = foldlParseMult(factor,
                                   [lambda x,y:x*y, lambda x,y:x/y, lambda x,y:x%y,
+                                      lambda x,y:int(x)&int(y),
+                                      lambda x,y:int(x)|int(y),
+                                      lambda x,y:int(x)^int(y),
                                       lambda x,y:int(x)<<int(y), lambda x,y:int(x)>>int(y)],
-                                  ['multiply', 'divide', 'modulo', 'lShift', 'rShift'],
+                                  ['multiply', 'divide', 'modulo', 'and', 'or',
+                                      'xor', 'lShift', 'rShift'],
                                   factNode.result,
                                   tokens[consumed:])
         consumed += foldNode.consumeCount
