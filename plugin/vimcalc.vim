@@ -6,8 +6,8 @@
 "TODO: move most of the functionality to autoload script if gets more complicated
 
 if has('python')
-    let scriptdirpy = expand("<sfile>:h") . '/'
-    exec "pyfile " . scriptdirpy . "vimcalc.py"
+    let s:scriptdirpy = expand("<sfile>:h") . '/'
+    exec "pyfile " . s:scriptdirpy . "vimcalc.py"
 endif
 
 if exists('g:loaded_vimcalc') || v:version < 700
@@ -99,7 +99,7 @@ function! s:VCalc_SetLocalSettings()
     silent! setlocal buftype=nofile
     silent! setlocal nobuflisted
     silent! setlocal noswapfile
-    silent! setlocal bufhidden=delete
+    silent! setlocal bufhidden=wipe
     silent! setlocal nonumber
     silent! setlocal nowrap
     setlocal filetype=vimcalc
@@ -120,7 +120,7 @@ function! s:VCalc_DefineMappingsAndAutoCommands()
 
     au BufEnter <buffer> :call <SID>VCalc_InsertOnEnter()
 
-    call <SId>VCalc_CreateCWInsertMappings()
+    call <SID>VCalc_CreateCWInsertMappings()
 endfunction
 
 function! s:VCalc_ValidateVim()
