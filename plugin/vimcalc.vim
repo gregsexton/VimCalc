@@ -117,6 +117,8 @@ function! s:VCalc_DefineMappingsAndAutoCommands()
 
     imap <buffer> <silent> <up> <C-o>:call <SID>VCalc_PreviousHistory()<CR>
     imap <buffer> <silent> <down> <C-o>:call <SID>VCalc_NextHistory()<CR>
+    imap <buffer> <silent> <c-p> <C-o>:call <SID>VCalc_PreviousHistory()<CR>
+    imap <buffer> <silent> <c-n> <C-o>:call <SID>VCalc_NextHistory()<CR>
 
     au BufEnter <buffer> :call <SID>VCalc_InsertOnEnter()
 
