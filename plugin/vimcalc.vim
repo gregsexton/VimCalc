@@ -5,6 +5,11 @@
 
 "TODO: move most of the functionality to autoload script if gets more complicated
 
+if has('python3')
+    let scriptdirpy = expand("<sfile>:h") . '/'
+    exec "py3file " . scriptdirpy . "vimcalc.py"
+endif
+
 if has('python')
     let scriptdirpy = expand("<sfile>:h") . '/'
     exec "pyfile " . scriptdirpy . "vimcalc.py"
@@ -124,7 +129,7 @@ function! s:VCalc_DefineMappingsAndAutoCommands()
 endfunction
 
 function! s:VCalc_ValidateVim()
-    if has('python') != 1
+    if has('python3') != 1 && has('python') != 1
         echohl WarningMsg | echomsg "VCalc requires the Python interface to be installed." | echohl None
         return -1
     endif
@@ -143,7 +148,11 @@ function! s:VCalc_REPL(continueInsert)
 
     call <SID>VCalc_RecordHistory(expr)
     "TODO: this breaks if a double quoted string is inputed.
-    exe "python repl(\"" . expr . "\")"
+    if has('python3')
+	exe "python3 repl(\"" . expr . "\")"
+    else
+	exe "python repl(\"" . expr . "\")"
+    endif
 
     "if executed command don't continue -- may be a ':q'
     if exists("w:vcalc_vim_command")
@@ -220,8 +229,27 @@ endfunction
 " **** PYTHON **********************************************************************************************
 " **********************************************************************************************************
 
-if has('python')
+if has('python3')
+python3 << EOF
 
+import vim
+
+def repl(expr):
+    if expr != "":
+        result = parse(expr)
+        #if result is of the form: "!!!.*!!!" it is a vim command to execute.
+        m = re.match(r"^!!!(.*)!!!$", result)
+        if m:
+            vim.command("call append(line('$'), g:VCalc_Prompt)") #add prompt
+            vim.command(m.group(1))
+            vim.command("let w:vcalc_vim_command = 1")
+        else:
+            for str in result.split("\n"):
+                vim.command("call append(line('$'), \"" + str + "\")")
+            vim.command("if exists(\"w:vcalc_vim_command\") | unlet w:vcalc_vim_command | endif")
+EOF
+
+elseif has('python')
 python << EOF
 
 import vim
