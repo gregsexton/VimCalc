@@ -251,7 +251,7 @@ class ParseException(Exception):
 #recursive descent parser -- simple and befitting the needs of this small program
 #generates the parse tree with evaluated decoration
 def parse(expr):
-    tokens = tokenize(expr)
+    tokens = list(tokenize(expr))
     if symbolCheck('ERROR', 0, tokens):
         return 'Syntax error: ' + tokens[0].attrib
     try:
@@ -267,7 +267,7 @@ def parse(expr):
                     return lineNode.assignedSymbol + ' = ' + process(lineNode.result)
         else:
             return 'Parse error: the expression is invalid.'
-    except ParseException, pe:
+    except ParseException as pe:
         return 'Parse error: ' + pe.message
 
 #this function returns an output string based on the global repl directives
@@ -411,13 +411,13 @@ def func(tokens):
             try:
                 result = apply(lookupFunc(sym), argsNode.result)
                 return ParseNode(True, result, argsNode.consumeCount+3)
-            except TypeError, e:
-                raise ParseException, (str(e), argsNode.consumeCount+3)
-            except ValueError, e:
-                raise ParseException, (str(e), argsNode.consumeCount+3)
+            except TypeError as e:
+                raise ParseException(str(e), argsNode.consumeCount+3)
+            except ValueError as e:
+                raise ParseException(str(e), argsNode.consumeCount+3)
         else:
             error = 'missing matching parenthesis for function ' + sym + '.'
-            raise ParseException, (error, argsNode.consumeCount+2)
+            raise ParseException(error, argsNode.consumeCount+2)
     else:
         return ParseNode(False, 0, 0)
 
@@ -488,7 +488,7 @@ def expt(tokens):
                 return ParseNode(True, exprNode.result, exprNode.consumeCount+2)
             else:
                 error = 'missing matching parenthesis in expression.'
-                raise ParseException, (error, exprNode.consumeCount+1)
+                raise ParseException(error, exprNode.consumeCount+1)
     return ParseNode(False, 0, 0)
 
 def number(tokens):
@@ -591,8 +591,9 @@ def foldr(fn, init, lst):
         return fn(init, foldr(fn, lst[0], lst[1:]))
 
 def symbolCheck(symbol, index, tokens):
-    if index < len(tokens):
-        if tokens[index].ID == symbol:
+    tokenList = list(tokens)
+    if index < len(tokenList):
+        if tokenList[index].ID == symbol:
             return True
     return False
 
@@ -614,7 +615,7 @@ def lookupSymbol(symbol):
         return VCALC_SYMBOL_TABLE[symbol]
     else:
         error = "symbol '" + symbol + "' is not defined."
-        raise ParseException, (error, 0)
+        raise ParseException(error, 0)
 
 def storeSymbol(symbol, value):
     VCALC_SYMBOL_TABLE[symbol] = value
@@ -688,4 +689,4 @@ def lookupFunc(symbol):
         return VCALC_FUNCTION_TABLE[symbol]
     else:
         error = "built-in function '" + symbol + "' does not exist."
-        raise ParseException, (error, 0)
+        raise ParseException(error, 0)
